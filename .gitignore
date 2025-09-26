@@ -1,0 +1,41 @@
+# Build results
+bin/
+obj/
+
+# Rider / VS Code / VS cache
+.vs/
+.idea/
+.vscode/
+
+# User-specific files
+*.user
+*.rsuser
+*.suo
+*.userosscache
+*.sln.docstates
+
+# Auto-generated files
+Generated/
+*.g.dart
+
+# NuGet packages
+*.nupkg
+*.snupkg
+*.nuspec
+packages/
+*.dll
+*.exe
+
+# Logs
+*.log
+
+# Coverage / Test results
+TestResults/
+*.coverage
+*.coveragexml
+*.trx
+
+# Other
+_ReSharper*/
+*.DotSettings.user
+*.swp
