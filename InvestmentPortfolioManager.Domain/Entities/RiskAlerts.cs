@@ -14,19 +14,43 @@ namespace InvestmentPortfolioManager.Domain.Entities
     public class RiskAlert : BaseEntity
     {
         [Required]
-        public Guid PortfolioId { get; private set; }
+        public Guid PortfolioId { get; set; }
 
         [Required]
-        public RiskAlertType AlertType { get; private set; }
+        public RiskAlertType AlertType { get; set; }
 
         [Required]
-        public RiskSeverity Severity { get; private set; }
+        public RiskSeverity Severity { get; set; }
+
+        [Required]
+        public RiskAlertPriority Priority { get; set; } = RiskAlertPriority.Medium;
 
         [Required, MaxLength(1000)]
         public string Message { get; private set; } = string.Empty;
 
+        // Bilingual titles
+        [MaxLength(500)]
+        public string TitleEN { get; set; } = string.Empty;
+        
+        [MaxLength(500)]
+        public string TitleFR { get; set; } = string.Empty;
+
+        // Bilingual messages
+        [MaxLength(2000)]
+        public string MessageEN { get; set; } = string.Empty;
+        
+        [MaxLength(2000)]
+        public string MessageFR { get; set; } = string.Empty;
+
         public decimal? Threshold { get; private set; }
         public decimal? ActualValue { get; private set; }
+
+        // Additional properties for risk service compatibility
+        public decimal? CurrentValue { get; set; }
+        public decimal? ThresholdValue { get; set; }
+        
+        [MaxLength(2000)]
+        public string RecommendedActions { get; set; } = string.Empty;
 
         [Required]
         public RiskAlertStatus Status { get; private set; } = RiskAlertStatus.Active;
@@ -41,7 +65,7 @@ namespace InvestmentPortfolioManager.Domain.Entities
         public virtual User? AcknowledgedByUser { get; private set; }
         public virtual User? ResolvedByUser { get; private set; }
 
-        protected RiskAlert() { } // For EF Core
+        public RiskAlert() { } // For EF Core - made public
 
         public RiskAlert(Guid portfolioId, RiskAlertType alertType, RiskSeverity severity, 
                         string message, decimal? threshold = null, decimal? actualValue = null)
@@ -210,6 +234,18 @@ namespace InvestmentPortfolioManager.Domain.Entities
         Active,         // Actif
         Acknowledged,   // Accusé réception
         Resolved        // Résolu
+    }
+
+    /// <summary>
+    /// Risk alert priority levels
+    /// Niveaux de priorité des alertes de risque
+    /// </summary>
+    public enum RiskAlertPriority
+    {
+        Low,        // Faible
+        Medium,     // Moyenne
+        High,       // Élevée
+        Critical    // Critique
     }
 
     /// <summary>
