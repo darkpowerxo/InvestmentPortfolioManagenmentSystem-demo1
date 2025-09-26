@@ -25,7 +25,7 @@ namespace InvestmentPortfolioManager.Domain.Services
         /// </summary>
         public PortfolioPerformanceAnalysis CalculatePortfolioPerformance(Portfolio portfolio, 
                                                                           IEnumerable<MarketData> portfolioValues,
-                                                                          IEnumerable<MarketData> benchmarkValues = null)
+                                                                          IEnumerable<MarketData>? benchmarkValues = null)
         {
             if (portfolio == null)
                 throw new ArgumentNullException(nameof(portfolio));
@@ -73,7 +73,7 @@ namespace InvestmentPortfolioManager.Domain.Services
                 analysis.Alpha = FinancialCalculations.CalculateAlpha(
                     analysis.AnnualizedReturn, 
                     FinancialCalculations.CalculateTimeWeightedReturn(benchmarkReturns), 
-                    analysis.Beta);
+                    analysis.Beta ?? 1m);
                 analysis.TrackingError = FinancialCalculations.CalculateTrackingError(returns, benchmarkReturns);
                 analysis.InformationRatio = FinancialCalculations.CalculateInformationRatio(returns, benchmarkReturns);
             }
@@ -94,7 +94,7 @@ namespace InvestmentPortfolioManager.Domain.Services
             {
                 PortfolioId = portfolio.Id,
                 AnalysisDate = DateTime.UtcNow,
-                TotalValue = portfolio.Holdings.Sum(h => h.CurrentValue)
+                TotalValue = portfolio.Holdings.Sum(h => h.MarketValue ?? 0)
             };
 
             // Asset class allocation
@@ -103,8 +103,8 @@ namespace InvestmentPortfolioManager.Domain.Services
                 .Select(g => new AssetClassAllocation
                 {
                     AssetClass = g.Key,
-                    Value = g.Sum(h => h.CurrentValue),
-                    Weight = g.Sum(h => h.CurrentValue) / analysis.TotalValue,
+                    Value = g.Sum(h => h.MarketValue ?? 0),
+                    Weight = g.Sum(h => h.MarketValue ?? 0) / analysis.TotalValue,
                     SecurityCount = g.Count()
                 })
                 .OrderByDescending(a => a.Weight)
@@ -118,9 +118,9 @@ namespace InvestmentPortfolioManager.Domain.Services
                 .GroupBy(h => h.Security.Sector)
                 .Select(g => new SectorAllocation
                 {
-                    Sector = g.Key,
-                    Value = g.Sum(h => h.CurrentValue),
-                    Weight = g.Sum(h => h.CurrentValue) / analysis.TotalValue,
+                    Sector = g.Key!,
+                    Value = g.Sum(h => h.MarketValue ?? 0),
+                    Weight = g.Sum(h => h.MarketValue ?? 0) / analysis.TotalValue,
                     SecurityCount = g.Count()
                 })
                 .OrderByDescending(s => s.Weight)
@@ -134,9 +134,9 @@ namespace InvestmentPortfolioManager.Domain.Services
                 .GroupBy(h => h.Security.Country)
                 .Select(g => new GeographicAllocation
                 {
-                    Country = g.Key,
-                    Value = g.Sum(h => h.CurrentValue),
-                    Weight = g.Sum(h => h.CurrentValue) / analysis.TotalValue,
+                    Country = g.Key!,
+                    Value = g.Sum(h => h.MarketValue ?? 0),
+                    Weight = g.Sum(h => h.MarketValue ?? 0) / analysis.TotalValue,
                     SecurityCount = g.Count()
                 })
                 .OrderByDescending(g => g.Weight)
@@ -163,7 +163,7 @@ namespace InvestmentPortfolioManager.Domain.Services
             {
                 PortfolioId = portfolio.Id,
                 AnalysisDate = DateTime.UtcNow,
-                TotalValue = portfolio.Holdings.Sum(h => h.CurrentValue)
+                TotalValue = portfolio.Holdings.Sum(h => h.MarketValue ?? 0)
             };
 
             // Holdings-based risk metrics
@@ -204,7 +204,7 @@ namespace InvestmentPortfolioManager.Domain.Services
             var results = new StressTestResults
             {
                 PortfolioId = portfolio.Id,
-                BaselineValue = portfolio.Holdings.Sum(h => h.CurrentValue),
+                BaselineValue = portfolio.Holdings.Sum(h => h.MarketValue ?? 0),
                 TestDate = DateTime.UtcNow,
                 ScenarioResults = new List<StressTestScenarioResult>()
             };
@@ -243,15 +243,15 @@ namespace InvestmentPortfolioManager.Domain.Services
                 result.EstimatedValue += impact.StressedValue;
             }
 
-            result.ValueChange = result.EstimatedValue - portfolio.Holdings.Sum(h => h.CurrentValue);
-            result.PercentageChange = result.ValueChange / portfolio.Holdings.Sum(h => h.CurrentValue);
+            result.ValueChange = result.EstimatedValue - portfolio.Holdings.Sum(h => h.MarketValue ?? 0);
+            result.PercentageChange = result.ValueChange / portfolio.Holdings.Sum(h => h.MarketValue ?? 0);
 
             return result;
         }
 
         private HoldingStressImpact CalculateHoldingStressImpact(Holding holding, StressTestScenario scenario)
         {
-            var baseValue = holding.CurrentValue;
+            var baseValue = holding.MarketValue ?? 0;
             var stressedValue = baseValue;
 
             // Apply asset class specific stress factors
@@ -309,8 +309,8 @@ namespace InvestmentPortfolioManager.Domain.Services
         private ConcentrationMetrics CalculateConcentrationMetrics(IEnumerable<Holding> holdings)
         {
             var holdingsList = holdings.ToList();
-            var totalValue = holdingsList.Sum(h => h.CurrentValue);
-            var weights = holdingsList.Select(h => h.CurrentValue / totalValue).ToList();
+            var totalValue = holdingsList.Sum(h => h.MarketValue ?? 0);
+            var weights = holdingsList.Select(h => (h.MarketValue ?? 0) / totalValue).ToList();
 
             return new ConcentrationMetrics
             {
@@ -328,8 +328,8 @@ namespace InvestmentPortfolioManager.Domain.Services
             {
                 HoldingId = h.Id,
                 SecuritySymbol = h.Security.Symbol,
-                Value = h.CurrentValue,
-                Weight = h.CurrentValue / holdings.Sum(holding => holding.CurrentValue),
+                Value = h.MarketValue ?? 0,
+                Weight = (h.MarketValue ?? 0) / holdings.Sum(holding => holding.MarketValue ?? 0),
                 EstimatedVolatility = h.Security.HistoricalVolatility ?? 0m,
                 EstimatedBeta = h.Security.Beta ?? 1m,
                 LiquidityRisk = AssessLiquidityRisk(h.Security),
@@ -339,15 +339,15 @@ namespace InvestmentPortfolioManager.Domain.Services
 
         private LiquidityAnalysis AnalyzeLiquidity(IEnumerable<Holding> holdings)
         {
-            var totalValue = holdings.Sum(h => h.CurrentValue);
+            var totalValue = holdings.Sum(h => h.MarketValue ?? 0);
             
             var liquidityBreakdown = holdings
                 .GroupBy(h => AssessLiquidityCategory(h.Security))
                 .Select(g => new LiquidityCategory
                 {
                     Category = g.Key,
-                    Value = g.Sum(h => h.CurrentValue),
-                    Weight = g.Sum(h => h.CurrentValue) / totalValue,
+                    Value = g.Sum(h => h.MarketValue ?? 0),
+                    Weight = g.Sum(h => h.MarketValue ?? 0) / totalValue,
                     SecurityCount = g.Count()
                 })
                 .ToList();
@@ -362,15 +362,15 @@ namespace InvestmentPortfolioManager.Domain.Services
 
         private CurrencyExposureAnalysis AnalyzeCurrencyExposure(IEnumerable<Holding> holdings)
         {
-            var totalValue = holdings.Sum(h => h.CurrentValue);
+            var totalValue = holdings.Sum(h => h.MarketValue ?? 0);
 
             var exposures = holdings
                 .GroupBy(h => h.Security.Currency)
                 .Select(g => new CurrencyExposure
                 {
                     Currency = g.Key,
-                    Value = g.Sum(h => h.CurrentValue),
-                    Weight = g.Sum(h => h.CurrentValue) / totalValue,
+                    Value = g.Sum(h => h.MarketValue ?? 0),
+                    Weight = g.Sum(h => h.MarketValue ?? 0) / totalValue,
                     SecurityCount = g.Count()
                 })
                 .OrderByDescending(e => e.Weight)
@@ -491,7 +491,7 @@ namespace InvestmentPortfolioManager.Domain.Services
 
     public class PortfolioPerformanceAnalysis
     {
-        public int PortfolioId { get; set; }
+        public Guid PortfolioId { get; set; }
         public DateTime AnalysisDate { get; set; }
         public DateTime AnalysisPeriodStart { get; set; }
         public DateTime AnalysisPeriodEnd { get; set; }
@@ -515,7 +515,7 @@ namespace InvestmentPortfolioManager.Domain.Services
 
     public class AssetAllocationAnalysis
     {
-        public int PortfolioId { get; set; }
+        public Guid PortfolioId { get; set; }
         public DateTime AnalysisDate { get; set; }
         public decimal TotalValue { get; set; }
         
@@ -527,7 +527,7 @@ namespace InvestmentPortfolioManager.Domain.Services
 
     public class AssetClassAllocation
     {
-        public AssetClass AssetClass { get; set; }
+        public required AssetClass AssetClass { get; set; }
         public decimal Value { get; set; }
         public decimal Weight { get; set; }
         public int SecurityCount { get; set; }
@@ -535,7 +535,7 @@ namespace InvestmentPortfolioManager.Domain.Services
 
     public class SectorAllocation
     {
-        public Sector Sector { get; set; }
+        public required Sector Sector { get; set; }
         public decimal Value { get; set; }
         public decimal Weight { get; set; }
         public int SecurityCount { get; set; }
@@ -543,7 +543,7 @@ namespace InvestmentPortfolioManager.Domain.Services
 
     public class GeographicAllocation
     {
-        public Country Country { get; set; }
+        public required Country Country { get; set; }
         public decimal Value { get; set; }
         public decimal Weight { get; set; }
         public int SecurityCount { get; set; }
@@ -560,7 +560,7 @@ namespace InvestmentPortfolioManager.Domain.Services
 
     public class RiskAnalysis
     {
-        public int PortfolioId { get; set; }
+        public Guid PortfolioId { get; set; }
         public DateTime AnalysisDate { get; set; }
         public decimal TotalValue { get; set; }
         
@@ -576,13 +576,13 @@ namespace InvestmentPortfolioManager.Domain.Services
 
     public class HoldingRiskMetric
     {
-        public int HoldingId { get; set; }
-        public string SecuritySymbol { get; set; }
+        public Guid HoldingId { get; set; }
+        public string SecuritySymbol { get; set; } = string.Empty;
         public decimal Value { get; set; }
         public decimal Weight { get; set; }
         public decimal EstimatedVolatility { get; set; }
         public decimal EstimatedBeta { get; set; }
-        public string LiquidityRisk { get; set; }
+        public string LiquidityRisk { get; set; } = string.Empty;
         public bool CurrencyRisk { get; set; }
     }
 
@@ -595,7 +595,7 @@ namespace InvestmentPortfolioManager.Domain.Services
 
     public class LiquidityCategory
     {
-        public string Category { get; set; }
+        public string Category { get; set; } = string.Empty;
         public decimal Value { get; set; }
         public decimal Weight { get; set; }
         public int SecurityCount { get; set; }
@@ -611,7 +611,7 @@ namespace InvestmentPortfolioManager.Domain.Services
 
     public class CurrencyExposure
     {
-        public Currency Currency { get; set; }
+        public required Currency Currency { get; set; }
         public decimal Value { get; set; }
         public decimal Weight { get; set; }
         public int SecurityCount { get; set; }
@@ -619,17 +619,17 @@ namespace InvestmentPortfolioManager.Domain.Services
 
     public class StressTestResults
     {
-        public int PortfolioId { get; set; }
+        public Guid PortfolioId { get; set; }
         public DateTime TestDate { get; set; }
         public decimal BaselineValue { get; set; }
         public List<StressTestScenarioResult> ScenarioResults { get; set; } = new();
-        public StressTestScenarioResult WorstCaseScenario { get; set; }
+        public StressTestScenarioResult? WorstCaseScenario { get; set; }
     }
 
     public class StressTestScenarioResult
     {
-        public int ScenarioId { get; set; }
-        public string ScenarioName { get; set; }
+        public Guid ScenarioId { get; set; }
+        public string ScenarioName { get; set; } = string.Empty;
         public decimal EstimatedValue { get; set; }
         public decimal ValueChange { get; set; }
         public decimal PercentageChange { get; set; }
@@ -638,8 +638,8 @@ namespace InvestmentPortfolioManager.Domain.Services
 
     public class HoldingStressImpact
     {
-        public int HoldingId { get; set; }
-        public string SecuritySymbol { get; set; }
+        public Guid HoldingId { get; set; }
+        public string SecuritySymbol { get; set; } = string.Empty;
         public decimal BaseValue { get; set; }
         public decimal StressedValue { get; set; }
         public decimal ValueChange { get; set; }

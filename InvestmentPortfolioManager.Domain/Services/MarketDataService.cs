@@ -187,13 +187,7 @@ namespace InvestmentPortfolioManager.Domain.Services
             }
 
             // Calculate signal line (EMA of MACD line)
-            var macdPrices = macdLine.Select(m => new MarketData
-            {
-                Date = m.Date,
-                ClosePrice = m.Value
-            });
-
-            var signalLine = CalculateExponentialMovingAverage(macdPrices, signalPeriod);
+            var signalLine = CalculateEMAFromValues(macdLine, signalPeriod);
             signalLine.ForEach(s => s.IndicatorName = "MACD_Signal");
 
             // Calculate histogram (MACD - Signal)
@@ -288,16 +282,16 @@ namespace InvestmentPortfolioManager.Domain.Services
 
                 // Check for local minima (support)
                 var isLocalMin = surroundingPrices.All(p => p.LowPrice >= currentPrice.LowPrice);
-                if (isLocalMin)
+                if (isLocalMin && currentPrice.LowPrice.HasValue)
                 {
-                    supportLevels.Add(currentPrice.LowPrice);
+                    supportLevels.Add(currentPrice.LowPrice.Value);
                 }
 
                 // Check for local maxima (resistance)
                 var isLocalMax = surroundingPrices.All(p => p.HighPrice <= currentPrice.HighPrice);
-                if (isLocalMax)
+                if (isLocalMax && currentPrice.HighPrice.HasValue)
                 {
-                    resistanceLevels.Add(currentPrice.HighPrice);
+                    resistanceLevels.Add(currentPrice.HighPrice.Value);
                 }
             }
 
@@ -374,9 +368,9 @@ namespace InvestmentPortfolioManager.Domain.Services
                 var current = pricesList[i];
                 var previous = pricesList[i - 1];
 
-                var tr1 = current.HighPrice - current.LowPrice;
-                var tr2 = Math.Abs(current.HighPrice - previous.ClosePrice);
-                var tr3 = Math.Abs(current.LowPrice - previous.ClosePrice);
+                var tr1 = (current.HighPrice ?? 0) - (current.LowPrice ?? 0);
+                var tr2 = Math.Abs((current.HighPrice ?? 0) - previous.ClosePrice);
+                var tr3 = Math.Abs((current.LowPrice ?? 0) - previous.ClosePrice);
 
                 var trueRange = Math.Max(tr1, Math.Max(tr2, tr3));
                 trueRanges.Add(trueRange);
@@ -562,6 +556,48 @@ namespace InvestmentPortfolioManager.Domain.Services
             return Math.Min(1m, qualityScore);
         }
 
+        /// <summary>
+        /// Helper method to calculate EMA from indicator values
+        /// Méthode d'aide pour calculer l'EMA à partir des valeurs d'indicateurs
+        /// </summary>
+        private List<TechnicalIndicatorValue> CalculateEMAFromValues(List<TechnicalIndicatorValue> values, int period)
+        {
+            var results = new List<TechnicalIndicatorValue>();
+            
+            if (values.Count < period)
+                return results;
+
+            var multiplier = 2m / (period + 1);
+            
+            // Initialize with first SMA value
+            var initialSMA = values.Take(period).Average(v => v.Value);
+            decimal previousEMA = initialSMA;
+
+            results.Add(new TechnicalIndicatorValue
+            {
+                Date = values[period - 1].Date,
+                Value = initialSMA,
+                IndicatorName = "EMA_Signal"
+            });
+
+            // Calculate EMA for remaining periods
+            for (int i = period; i < values.Count; i++)
+            {
+                var currentEMA = (values[i].Value * multiplier) + (previousEMA * (1 - multiplier));
+                
+                results.Add(new TechnicalIndicatorValue
+                {
+                    Date = values[i].Date,
+                    Value = currentEMA,
+                    IndicatorName = "EMA_Signal"
+                });
+
+                previousEMA = currentEMA;
+            }
+
+            return results;
+        }
+
         #endregion
     }
 
@@ -571,7 +607,7 @@ namespace InvestmentPortfolioManager.Domain.Services
     {
         public DateTime Date { get; set; }
         public decimal Value { get; set; }
-        public string IndicatorName { get; set; }
+        public string IndicatorName { get; set; } = string.Empty;
     }
 
     public class MACDResult
@@ -598,7 +634,7 @@ namespace InvestmentPortfolioManager.Domain.Services
     {
         public bool IsValid { get; set; }
         public int TotalRecords { get; set; }
-        public DateRange DateRange { get; set; }
+        public DateRange? DateRange { get; set; }
         public decimal QualityScore { get; set; }
         public List<DataQualityIssue> Issues { get; set; } = new();
     }
@@ -611,9 +647,9 @@ namespace InvestmentPortfolioManager.Domain.Services
 
     public class DataQualityIssue
     {
-        public string IssueType { get; set; }
-        public string Description { get; set; }
-        public string Severity { get; set; } // High, Medium, Low
+        public string IssueType { get; set; } = string.Empty;
+        public string Description { get; set; } = string.Empty;
+        public string Severity { get; set; } = string.Empty; // High, Medium, Low
     }
 
     #endregion
