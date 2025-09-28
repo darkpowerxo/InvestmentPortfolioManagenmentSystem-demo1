@@ -21,9 +21,19 @@ public class Security
     [Required]
     public SecurityType SecurityType { get; set; }
     
+    // Alias for SecurityType to match DTO expectations - backed by SecurityType
+    public SecurityType Type
+    {
+        get => SecurityType;
+        set => SecurityType = value;
+    }
+    
     [Required]
     [MaxLength(10)]
     public string Currency { get; set; } = "CAD";
+    
+    // Current market price
+    public decimal CurrentPrice { get; set; } = 0;
     
     [MaxLength(100)]
     public string Exchange { get; set; } = string.Empty; // TSX, NYSE, NASDAQ

@@ -17,10 +17,23 @@ public class TradeOrder
     public int SecurityId { get; set; }
     
     [Required]
-    public TransactionType OrderSide { get; set; } // Buy or Sell
+    public OrderSide OrderSide { get; set; } // Buy or Sell
     
     [Required]
     public OrderType OrderType { get; set; }
+    
+    // Aliases for DTO compatibility - backed by original properties
+    public OrderType Type
+    {
+        get => OrderType;
+        set => OrderType = value;
+    }
+    
+    public OrderSide Side
+    {
+        get => OrderSide;
+        set => OrderSide = value;
+    }
     
     [Required]
     public decimal Quantity { get; set; }
@@ -39,6 +52,13 @@ public class TradeOrder
     
     public DateTime? ExecutionDate { get; set; }
     public DateTime? ExpirationDate { get; set; }
+    
+    // Alias for ExecutionDate to match DTO expectations - backed by ExecutionDate
+    public DateTime? FilledDate
+    {
+        get => ExecutionDate;
+        set => ExecutionDate = value;
+    }
     
     [MaxLength(500)]
     public string Notes { get; set; } = string.Empty;

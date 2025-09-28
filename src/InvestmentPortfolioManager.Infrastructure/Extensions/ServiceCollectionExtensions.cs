@@ -50,9 +50,11 @@ public static class ServiceCollectionExtensions
         // Unit of Work
         services.AddScoped<IUnitOfWork, UnitOfWork>();
 
-        // Health Checks for Database
-        services.AddHealthChecks()
-            .AddDbContextCheck<PortfolioDbContext>("database");
+        // Seed Data Service
+        services.AddScoped<ISeedDataService, DatabaseSeedService>();
+
+        // TODO: Add health checks package if needed
+        // services.AddHealthChecks().AddDbContextCheck<PortfolioDbContext>("database");
 
         return services;
     }

@@ -1,5 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using InvestmentPortfolioManager.Infrastructure.Data;
+using InvestmentPortfolioManager.Infrastructure.Extensions;
+using InvestmentPortfolioManager.Application.Extensions;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -9,6 +11,12 @@ builder.Services.AddControllers();
 // Configure Entity Framework
 builder.Services.AddDbContext<PortfolioDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+
+// Register Application Services
+builder.Services.AddApplicationServices();
+
+// Register Infrastructure Services (repositories, unit of work)
+builder.Services.AddInfrastructureServices(builder.Configuration);
 
 // Add Swagger/OpenAPI
 builder.Services.AddEndpointsApiExplorer();
@@ -53,11 +61,14 @@ app.UseAuthorization();
 
 app.MapControllers();
 
-// Ensure database is created and migrated
+// Ensure database is created and seeded
 using (var scope = app.Services.CreateScope())
 {
     var context = scope.ServiceProvider.GetRequiredService<PortfolioDbContext>();
+    var seedDataService = scope.ServiceProvider.GetRequiredService<ISeedDataService>();
+    
     await context.Database.EnsureCreatedAsync();
+    await seedDataService.SeedDataAsync();
 }
 
 app.Run();

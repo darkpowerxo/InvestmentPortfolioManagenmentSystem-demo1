@@ -199,7 +199,7 @@ public class PerformanceMetricRepository : Repository<PerformanceMetric>, IPerfo
     {
         return await _dbSet
             .Where(pm => pm.PortfolioId == portfolioId)
-            .OrderByDescending(pm => pm.Date)
+            .OrderByDescending(pm => pm.CalculationDate)
             .ToListAsync();
     }
 
@@ -207,9 +207,9 @@ public class PerformanceMetricRepository : Repository<PerformanceMetric>, IPerfo
     {
         return await _dbSet
             .Where(pm => pm.PortfolioId == portfolioId && 
-                        pm.Date >= startDate && 
-                        pm.Date <= endDate)
-            .OrderBy(pm => pm.Date)
+                        pm.CalculationDate >= startDate && 
+                        pm.CalculationDate <= endDate)
+            .OrderBy(pm => pm.CalculationDate)
             .ToListAsync();
     }
 
@@ -217,29 +217,29 @@ public class PerformanceMetricRepository : Repository<PerformanceMetric>, IPerfo
     {
         return await _dbSet
             .Where(pm => pm.PortfolioId == portfolioId)
-            .OrderByDescending(pm => pm.Date)
+            .OrderByDescending(pm => pm.CalculationDate)
             .FirstOrDefaultAsync();
     }
 
     public async Task<IEnumerable<PerformanceMetric>> GetMetricsByTypeAsync(string metricType)
     {
         return await _dbSet
-            .Where(pm => pm.MetricType == metricType)
-            .OrderByDescending(pm => pm.Date)
+            .Where(pm => pm.BenchmarkSymbol == metricType) // Using BenchmarkSymbol as closest equivalent
+            .OrderByDescending(pm => pm.CalculationDate)
             .ToListAsync();
     }
 
     public async Task<decimal?> GetLatestReturnAsync(int portfolioId)
     {
         var latest = await GetLatestMetricsAsync(portfolioId);
-        return latest?.Value;
+        return latest?.MonthlyReturn;
     }
 
     public async Task<IEnumerable<PerformanceMetric>> GetBenchmarkMetricsAsync(int portfolioId)
     {
         return await _dbSet
-            .Where(pm => pm.PortfolioId == portfolioId && pm.MetricType.Contains("Benchmark"))
-            .OrderByDescending(pm => pm.Date)
+            .Where(pm => pm.PortfolioId == portfolioId && !string.IsNullOrEmpty(pm.BenchmarkSymbol))
+            .OrderByDescending(pm => pm.CalculationDate)
             .ToListAsync();
     }
 }
@@ -319,6 +319,6 @@ public class TradeOrderRepository : Repository<TradeOrder>, ITradeOrderRepositor
     {
         return await _dbSet
             .Where(o => o.PortfolioId == portfolioId && o.Status == status)
-            .SumAsync(o => o.Quantity * (o.LimitPrice ?? o.EstimatedPrice ?? 0));
+            .SumAsync(o => o.Quantity * (o.LimitPrice ?? 0));
     }
 }

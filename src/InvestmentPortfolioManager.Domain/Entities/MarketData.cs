@@ -32,6 +32,37 @@ public class MarketData
     
     public long Volume { get; set; }
     
+    // Aliases for DTO compatibility - backed by original properties
+    public decimal Open
+    {
+        get => OpenPrice;
+        set => OpenPrice = value;
+    }
+    
+    public decimal High
+    {
+        get => HighPrice;
+        set => HighPrice = value;
+    }
+    
+    public decimal Low
+    {
+        get => LowPrice;
+        set => LowPrice = value;
+    }
+    
+    public decimal Close
+    {
+        get => ClosePrice;
+        set => ClosePrice = value;
+    }
+    
+    public decimal AdjustedClose
+    {
+        get => AdjustedClosePrice;
+        set => AdjustedClosePrice = value;
+    }
+    
     [MaxLength(10)]
     public string Currency { get; set; } = "CAD";
     

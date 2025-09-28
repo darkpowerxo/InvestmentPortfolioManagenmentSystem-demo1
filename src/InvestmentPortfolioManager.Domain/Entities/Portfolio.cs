@@ -20,6 +20,13 @@ public class Portfolio
     [Required]
     public PortfolioType PortfolioType { get; set; }
     
+    // Alias for PortfolioType to match DTO expectations - backed by PortfolioType
+    public PortfolioType Type
+    {
+        get => PortfolioType;
+        set => PortfolioType = value;
+    }
+    
     [Required]
     public RiskLevel RiskLevel { get; set; }
     
@@ -32,6 +39,7 @@ public class Portfolio
     
     public decimal InitialValue { get; set; }
     public decimal CurrentValue { get; set; }
+    public decimal CashBalance { get; set; } = 0;
     
     public DateTime InceptionDate { get; set; }
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;

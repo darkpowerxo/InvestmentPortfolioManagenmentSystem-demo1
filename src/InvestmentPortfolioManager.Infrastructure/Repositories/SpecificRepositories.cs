@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using InvestmentPortfolioManager.Domain.Entities;
+using InvestmentPortfolioManager.Domain.Enums;
 using InvestmentPortfolioManager.Infrastructure.Data;
 using InvestmentPortfolioManager.Infrastructure.Repositories.Contracts;
 
@@ -19,7 +20,7 @@ public class UserRepository : Repository<User>, IUserRepository
         return await _dbSet.FirstOrDefaultAsync(u => u.Email == email);
     }
 
-    public async Task<IEnumerable<User>> GetUsersByRoleAsync(string role)
+    public async Task<IEnumerable<User>> GetUsersByRoleAsync(UserRole role)
     {
         return await _dbSet.Where(u => u.Role == role).ToListAsync();
     }

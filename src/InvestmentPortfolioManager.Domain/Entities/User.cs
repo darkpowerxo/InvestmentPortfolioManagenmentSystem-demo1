@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using InvestmentPortfolioManager.Domain.Enums;
 
 namespace InvestmentPortfolioManager.Domain.Entities;
 
@@ -26,13 +27,13 @@ public class User
     public string PasswordHash { get; set; } = string.Empty;
     
     [Required]
-    [MaxLength(50)]
-    public string Role { get; set; } = string.Empty; // PortfolioManager, Analyst, Admin
+    public UserRole Role { get; set; } = UserRole.Viewer;
     
     [MaxLength(10)]
     public string PreferredLanguage { get; set; } = "en"; // en, fr
     
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+    public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
     public DateTime? LastLoginAt { get; set; }
     public bool IsActive { get; set; } = true;
     

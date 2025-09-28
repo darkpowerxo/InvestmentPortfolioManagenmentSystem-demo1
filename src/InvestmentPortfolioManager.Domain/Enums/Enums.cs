@@ -23,6 +23,7 @@ public enum TransactionType
     Dividend = 3,
     Interest = 4,
     Split = 5,
+    StockSplit = 5, // Alias for Split
     Merger = 6,
     SpinOff = 7,
     CashDeposit = 8,
@@ -32,11 +33,12 @@ public enum TransactionType
 
 public enum PortfolioType
 {
-    Equity = 1,
-    FixedIncome = 2,
+    Growth = 1,
+    Conservative = 2,
     Balanced = 3,
-    Alternative = 4,
-    Custom = 5
+    Income = 4,
+    Alternative = 5,
+    Custom = 6
 }
 
 public enum RiskLevel
@@ -64,4 +66,20 @@ public enum OrderType
     Limit = 2,
     Stop = 3,
     StopLimit = 4
+}
+
+public enum OrderSide
+{
+    Buy = 1,
+    Sell = 2
+}
+
+public enum UserRole
+{
+    Administrator = 1,
+    PortfolioManager = 2,
+    Analyst = 3,
+    RiskManager = 4,
+    Trader = 5,
+    Viewer = 6
 }

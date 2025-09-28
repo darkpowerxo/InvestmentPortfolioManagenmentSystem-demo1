@@ -1,4 +1,5 @@
 using InvestmentPortfolioManager.Domain.Entities;
+using InvestmentPortfolioManager.Domain.Enums;
 
 namespace InvestmentPortfolioManager.Infrastructure.Repositories.Contracts;
 
@@ -29,7 +30,7 @@ public interface IRepository<T> where T : class
 public interface IUserRepository : IRepository<User>
 {
     Task<User?> GetByEmailAsync(string email);
-    Task<IEnumerable<User>> GetUsersByRoleAsync(string role);
+    Task<IEnumerable<User>> GetUsersByRoleAsync(UserRole role);
     Task<IEnumerable<User>> GetActiveUsersAsync();
 }
 

@@ -19,6 +19,13 @@ public class Transaction
     [Required]
     public TransactionType TransactionType { get; set; }
     
+    // Alias for TransactionType to match DTO expectations - backed by TransactionType
+    public TransactionType Type
+    {
+        get => TransactionType;
+        set => TransactionType = value;
+    }
+    
     [Required]
     public decimal Quantity { get; set; }
     
@@ -28,6 +35,13 @@ public class Transaction
     public decimal TotalAmount { get; set; } // Quantity * Price
     public decimal Commission { get; set; }
     public decimal OtherFees { get; set; }
+    
+    // Alias for OtherFees to match DTO expectations - backed by OtherFees
+    public decimal Tax
+    {
+        get => OtherFees;
+        set => OtherFees = value;
+    }
     public decimal NetAmount { get; set; } // TotalAmount +/- Commission + OtherFees
     
     [Required]

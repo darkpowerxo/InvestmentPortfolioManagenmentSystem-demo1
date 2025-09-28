@@ -35,7 +35,7 @@ public static class SeedDataService
                 Email = "marie.tremblay@cdpq.com",
                 FirstName = "Marie",
                 LastName = "Tremblay",
-                Role = "Portfolio Manager",
+                Role = UserRole.PortfolioManager,
                 PreferredLanguage = "fr",
                 IsActive = true,
                 CreatedAt = DateTime.UtcNow.AddMonths(-24)
@@ -46,7 +46,7 @@ public static class SeedDataService
                 Email = "john.smith@cdpq.com",
                 FirstName = "John",
                 LastName = "Smith",
-                Role = "Senior Analyst",
+                Role = UserRole.Analyst,
                 PreferredLanguage = "en",
                 IsActive = true,
                 CreatedAt = DateTime.UtcNow.AddMonths(-18)
@@ -57,7 +57,7 @@ public static class SeedDataService
                 Email = "sophie.dubois@cdpq.com",
                 FirstName = "Sophie",
                 LastName = "Dubois",
-                Role = "Risk Manager",
+                Role = UserRole.RiskManager,
                 PreferredLanguage = "fr",
                 IsActive = true,
                 CreatedAt = DateTime.UtcNow.AddMonths(-12)
@@ -68,7 +68,7 @@ public static class SeedDataService
                 Email = "david.wang@cdpq.com",
                 FirstName = "David",
                 LastName = "Wang",
-                Role = "Quantitative Analyst",
+                Role = UserRole.Analyst,
                 PreferredLanguage = "en",
                 IsActive = true,
                 CreatedAt = DateTime.UtcNow.AddMonths(-6)
@@ -274,7 +274,7 @@ public static class SeedDataService
                 Id = 1,
                 Name = "CDPQ Equity Growth Fund",
                 Description = "Growth-oriented equity portfolio focused on Canadian and US large-cap stocks",
-                PortfolioType = PortfolioType.Equity,
+                PortfolioType = PortfolioType.Growth,
                 RiskLevel = RiskLevel.ModerateAggressive,
                 BaseCurrency = "CAD",
                 ManagerId = 1,
@@ -312,7 +312,7 @@ public static class SeedDataService
                 Id = 3,
                 Name = "CDPQ Fixed Income Fund",
                 Description = "Conservative fixed income portfolio with government and high-grade corporate bonds",
-                PortfolioType = PortfolioType.FixedIncome,
+                PortfolioType = PortfolioType.Conservative,
                 RiskLevel = RiskLevel.Conservative,
                 BaseCurrency = "CAD",
                 ManagerId = 3,
@@ -614,40 +614,49 @@ public static class SeedDataService
                 Id = 1,
                 PortfolioId = 1,
                 SecurityId = 2, // SHOP.TO
+                OrderSide = OrderSide.Buy,
                 OrderType = OrderType.Limit,
                 Quantity = 1000,
                 LimitPrice = 195.00m,
                 Status = OrderStatus.Pending,
-                CreatedAt = DateTime.UtcNow.AddHours(-2),
-                ValidUntil = DateTime.UtcNow.AddDays(1)
+                CreatedByUserId = 1,
+                OrderDate = DateTime.UtcNow.AddHours(-2),
+                ExpirationDate = DateTime.UtcNow.AddDays(1),
+                CreatedAt = DateTime.UtcNow.AddHours(-2)
             },
             new TradeOrder
             {
                 Id = 2,
                 PortfolioId = 2,
                 SecurityId = 6, // AAPL
+                OrderSide = OrderSide.Buy,
                 OrderType = OrderType.Market,
                 Quantity = 2500,
                 Status = OrderStatus.Filled,
-                ExecutedPrice = 182.30m,
-                ExecutedQuantity = 2500,
-                CreatedAt = DateTime.UtcNow.AddDays(-1),
-                ExecutedAt = DateTime.UtcNow.AddDays(-1).AddMinutes(5)
+                QuantityFilled = 2500,
+                AverageExecutionPrice = 182.30m,
+                CreatedByUserId = 2,
+                OrderDate = DateTime.UtcNow.AddDays(-1),
+                ExecutionDate = DateTime.UtcNow.AddDays(-1).AddMinutes(5),
+                CreatedAt = DateTime.UtcNow.AddDays(-1)
             },
             new TradeOrder
             {
                 Id = 3,
                 PortfolioId = 3,
                 SecurityId = 11, // GC001
+                OrderSide = OrderSide.Buy,
                 OrderType = OrderType.Limit,
                 Quantity = 100,
                 LimitPrice = 1015.00m,
                 Status = OrderStatus.PartiallyFilled,
-                ExecutedPrice = 1018.75m,
-                ExecutedQuantity = 50,
-                CreatedAt = DateTime.UtcNow.AddHours(-6),
-                ExecutedAt = DateTime.UtcNow.AddHours(-4),
-                ValidUntil = DateTime.UtcNow.AddDays(7)
+                QuantityFilled = 50,
+                AverageExecutionPrice = 1018.75m,
+                CreatedByUserId = 3,
+                OrderDate = DateTime.UtcNow.AddHours(-6),
+                ExecutionDate = DateTime.UtcNow.AddHours(-4),
+                ExpirationDate = DateTime.UtcNow.AddDays(7),
+                CreatedAt = DateTime.UtcNow.AddHours(-6)
             }
         };
 

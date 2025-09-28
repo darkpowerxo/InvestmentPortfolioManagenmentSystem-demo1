@@ -21,6 +21,13 @@ public class Position
     [Required]
     public decimal AverageCost { get; set; } // Cost basis per unit
     
+    // Alias for AverageCost to match DTO expectations - backed by AverageCost
+    public decimal AveragePrice
+    {
+        get => AverageCost;
+        set => AverageCost = value;
+    }
+    
     public decimal CurrentPrice { get; set; }
     public decimal MarketValue { get; set; } // Quantity * CurrentPrice
     public decimal UnrealizedGainLoss { get; set; } // MarketValue - (Quantity * AverageCost)

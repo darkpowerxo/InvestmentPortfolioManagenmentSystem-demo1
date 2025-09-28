@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using InvestmentPortfolioManager.Domain.Entities;
+using InvestmentPortfolioManager.Domain.Enums;
 
 namespace InvestmentPortfolioManager.Infrastructure.Data;
 
@@ -314,7 +315,7 @@ public class PortfolioDbContext : DbContext
                 LastName = "Tremblay",
                 Email = "jean.tremblay@cdpq.com",
                 PasswordHash = "$2a$11$dummy.hash.for.demo.purposes.only", // In real app, use proper hashing
-                Role = "PortfolioManager",
+                Role = UserRole.PortfolioManager,
                 PreferredLanguage = "fr",
                 CreatedAt = DateTime.UtcNow,
                 IsActive = true
@@ -326,7 +327,7 @@ public class PortfolioDbContext : DbContext
                 LastName = "Johnson",
                 Email = "sarah.johnson@cdpq.com",
                 PasswordHash = "$2a$11$dummy.hash.for.demo.purposes.only",
-                Role = "Analyst",
+                Role = UserRole.Analyst,
                 PreferredLanguage = "en",
                 CreatedAt = DateTime.UtcNow,
                 IsActive = true

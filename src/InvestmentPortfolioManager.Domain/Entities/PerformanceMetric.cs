@@ -25,6 +25,19 @@ public class PerformanceMetric
     public decimal FiveYearReturn { get; set; }
     public decimal SinceInceptionReturn { get; set; }
     
+    // Aliases for DTO compatibility - backed by original properties
+    public decimal YtdReturn
+    {
+        get => YearToDateReturn;
+        set => YearToDateReturn = value;
+    }
+    
+    public decimal TotalReturn
+    {
+        get => SinceInceptionReturn;
+        set => SinceInceptionReturn = value;
+    }
+    
     // Risk metrics
     public decimal Volatility { get; set; } // Annualized standard deviation
     public decimal SharpeRatio { get; set; }
