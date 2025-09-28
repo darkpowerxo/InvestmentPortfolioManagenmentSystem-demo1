@@ -587,37 +587,17 @@ public static class SeedDataService
             
             foreach (int portfolioId in new[] { 1, 2, 3 })
             {
-                // Monthly return
+                // Monthly performance metrics
                 metrics.Add(new PerformanceMetric
                 {
                     Id = metricId++,
                     PortfolioId = portfolioId,
-                    MetricType = "Monthly Return",
-                    Value = (decimal)((new Random(42).NextDouble() - 0.5) * 0.08), // -4% to +4%
-                    Date = date,
-                    CreatedAt = date.AddDays(1)
-                });
+                    CalculationDate = date,
+                    MonthlyReturn = (decimal)((new Random(42).NextDouble() - 0.5) * 0.08), // -4% to +4%
+                    SharpeRatio = 0.8m + (decimal)(new Random(42 + portfolioId).NextDouble() * 0.8), // 0.8 to 1.6
+                    Volatility = 0.10m + (decimal)(new Random(42 + portfolioId * 2).NextDouble() * 0.10), // 10% to 20%
+                    CreatedAt = date.AddDays(1),
 
-                // Sharpe Ratio
-                metrics.Add(new PerformanceMetric
-                {
-                    Id = metricId++,
-                    PortfolioId = portfolioId,
-                    MetricType = "Sharpe Ratio",
-                    Value = 0.8m + (decimal)(new Random(42 + portfolioId).NextDouble() * 0.8), // 0.8 to 1.6
-                    Date = date,
-                    CreatedAt = date.AddDays(1)
-                });
-
-                // Volatility
-                metrics.Add(new PerformanceMetric
-                {
-                    Id = metricId++,
-                    PortfolioId = portfolioId,
-                    MetricType = "Volatility",
-                    Value = 0.10m + (decimal)(new Random(42 + portfolioId * 2).NextDouble() * 0.10), // 10% to 20%
-                    Date = date,
-                    CreatedAt = date.AddDays(1)
                 });
             }
         }
