@@ -53,6 +53,64 @@ public class AuthController : ControllerBase
     }
 
     /// <summary>
+    /// Register a new user
+    /// </summary>
+    [HttpPost("register")]
+    public async Task<ActionResult<AuthenticationResult>> Register([FromBody] RegisterRequest request)
+    {
+        try
+        {
+            if (string.IsNullOrWhiteSpace(request.Email) || 
+                string.IsNullOrWhiteSpace(request.Password) ||
+                string.IsNullOrWhiteSpace(request.FirstName) ||
+                string.IsNullOrWhiteSpace(request.LastName))
+            {
+                return BadRequest(AuthenticationResult.Failed("Email, password, first name, and last name are required"));
+            }
+
+            if (request.Password != request.ConfirmPassword)
+            {
+                return BadRequest(AuthenticationResult.Failed("Password and confirmation do not match"));
+            }
+
+            if (request.Password.Length < 6)
+            {
+                return BadRequest(AuthenticationResult.Failed("Password must be at least 6 characters long"));
+            }
+
+            // TODO: Implement user registration logic in a service
+            // For now, return a success response
+            _logger.LogInformation("User registration attempt for email: {Email}", request.Email);
+            
+            // Simulate successful registration
+            var result = new AuthenticationResult
+            {
+                IsSuccess = true,
+                Token = "temp_jwt_token",
+                RefreshToken = "temp_refresh_token",
+                User = new AuthUserDto
+                {
+                    Id = 1,
+                    Email = request.Email,
+                    FirstName = request.FirstName,
+                    LastName = request.LastName,
+                    Role = request.Role ?? "Viewer",
+                    IsActive = true,
+                    CreatedAt = DateTime.UtcNow
+                },
+                ExpiresAt = DateTime.UtcNow.AddHours(1)
+            };
+
+            return Ok(result);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error during user registration for email: {Email}", request.Email);
+            return StatusCode(500, AuthenticationResult.Failed("An error occurred during registration"));
+        }
+    }
+
+    /// <summary>
     /// Refresh JWT token using refresh token
     /// </summary>
     [HttpPost("refresh")]

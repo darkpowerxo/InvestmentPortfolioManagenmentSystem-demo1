@@ -1,4 +1,5 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { 
   portfoliosApi, 
   securitiesApi, 
@@ -13,8 +14,14 @@ import {
   Transaction, 
   User, 
   PortfolioSummary,
-  SearchResult 
+  SearchResult,
+  LoginRequest,
+  RegisterRequest,
+  PasswordResetRequest,
+  PasswordResetConfirm
 } from '../types';
+import { useAuth } from '../contexts/AuthContext';
+import AuthService from '../services/authService';
 
 // Generic hook for API data fetching
 export const useApiData = <T>(
@@ -266,4 +273,313 @@ export const useLocalStorage = <T>(key: string, initialValue: T) => {
   };
 
   return [storedValue, setValue] as const;
+};
+
+// Authentication Hooks
+
+/**
+ * Hook for handling login form and state
+ */
+export const useLogin = () => {
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const { login } = useAuth();
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  const handleLogin = useCallback(async (credentials: LoginRequest) => {
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      const success = await login(credentials);
+      
+      if (success) {
+        // Redirect to intended page or dashboard
+        const from = (location.state as any)?.from?.pathname || '/dashboard';
+        navigate(from, { replace: true });
+        return true;
+      } else {
+        setError('Invalid email or password');
+        return false;
+      }
+    } catch (err: any) {
+      setError(err.message || 'Login failed');
+      return false;
+    } finally {
+      setIsLoading(false);
+    }
+  }, [login, navigate, location.state]);
+
+  const clearError = useCallback(() => {
+    setError(null);
+  }, []);
+
+  return {
+    login: handleLogin,
+    isLoading,
+    error,
+    clearError
+  };
+};
+
+/**
+ * Hook for handling registration form and state
+ */
+export const useRegister = () => {
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState(false);
+  const { register } = useAuth();
+  const navigate = useNavigate();
+
+  const handleRegister = useCallback(async (userData: RegisterRequest) => {
+    setIsLoading(true);
+    setError(null);
+    setSuccess(false);
+
+    try {
+      const success = await register(userData);
+      
+      if (success) {
+        setSuccess(true);
+        // Redirect to dashboard after successful registration
+        setTimeout(() => {
+          navigate('/dashboard', { replace: true });
+        }, 1000);
+        return true;
+      } else {
+        setError('Registration failed. Please check your information.');
+        return false;
+      }
+    } catch (err: any) {
+      setError(err.message || 'Registration failed');
+      return false;
+    } finally {
+      setIsLoading(false);
+    }
+  }, [register, navigate]);
+
+  const clearError = useCallback(() => {
+    setError(null);
+  }, []);
+
+  const clearSuccess = useCallback(() => {
+    setSuccess(false);
+  }, []);
+
+  return {
+    register: handleRegister,
+    isLoading,
+    error,
+    success,
+    clearError,
+    clearSuccess
+  };
+};
+
+/**
+ * Hook for handling password reset functionality
+ */
+export const usePasswordReset = () => {
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState(false);
+
+  const requestReset = useCallback(async (data: PasswordResetRequest) => {
+    setIsLoading(true);
+    setError(null);
+    setSuccess(false);
+
+    try {
+      const response = await AuthService.requestPasswordReset(data);
+      
+      if (response.success) {
+        setSuccess(true);
+        return true;
+      } else {
+        setError(response.message || 'Password reset request failed');
+        return false;
+      }
+    } catch (err: any) {
+      setError(err.message || 'Password reset request failed');
+      return false;
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  const confirmReset = useCallback(async (data: PasswordResetConfirm) => {
+    setIsLoading(true);
+    setError(null);
+    setSuccess(false);
+
+    try {
+      const response = await AuthService.confirmPasswordReset(data);
+      
+      if (response.success) {
+        setSuccess(true);
+        return true;
+      } else {
+        setError(response.message || 'Password reset failed');
+        return false;
+      }
+    } catch (err: any) {
+      setError(err.message || 'Password reset failed');
+      return false;
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  const clearError = useCallback(() => {
+    setError(null);
+  }, []);
+
+  const clearSuccess = useCallback(() => {
+    setSuccess(false);
+  }, []);
+
+  return {
+    requestReset,
+    confirmReset,
+    isLoading,
+    error,
+    success,
+    clearError,
+    clearSuccess
+  };
+};
+
+/**
+ * Hook for protected routes - redirects to login if not authenticated
+ */
+export const useProtectedRoute = (requiredRoles?: string[]) => {
+  const { isAuthenticated, isLoading, hasAnyRole } = useAuth();
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  useEffect(() => {
+    if (!isLoading) {
+      if (!isAuthenticated) {
+        // Redirect to login with return URL
+        navigate('/login', { 
+          state: { from: location },
+          replace: true 
+        });
+      } else if (requiredRoles && !hasAnyRole(requiredRoles)) {
+        // Redirect to unauthorized page or dashboard
+        navigate('/unauthorized', { replace: true });
+      }
+    }
+  }, [isAuthenticated, isLoading, hasAnyRole, requiredRoles, navigate, location]);
+
+  return {
+    isAuthenticated,
+    isLoading,
+    hasPermission: !requiredRoles || hasAnyRole(requiredRoles)
+  };
+};
+
+/**
+ * Hook for logout functionality
+ */
+export const useLogout = () => {
+  const [isLoading, setIsLoading] = useState(false);
+  const { logout } = useAuth();
+  const navigate = useNavigate();
+
+  const handleLogout = useCallback(async () => {
+    setIsLoading(true);
+    
+    try {
+      await logout();
+      navigate('/login', { replace: true });
+    } catch (error) {
+      console.error('Logout error:', error);
+      // Still navigate to login even if logout fails
+      navigate('/login', { replace: true });
+    } finally {
+      setIsLoading(false);
+    }
+  }, [logout, navigate]);
+
+  return {
+    logout: handleLogout,
+    isLoading
+  };
+};
+
+/**
+ * Hook for user profile management
+ */
+export const useProfile = () => {
+  const { user, updateProfile, changePassword, refreshUserProfile } = useAuth();
+  const [isUpdating, setIsUpdating] = useState(false);
+  const [isChangingPassword, setIsChangingPassword] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
+
+  const handleUpdateProfile = useCallback(async (profileData: any) => {
+    setIsUpdating(true);
+    setError(null);
+    setSuccess(null);
+
+    try {
+      const success = await updateProfile(profileData);
+      
+      if (success) {
+        setSuccess('Profile updated successfully');
+        return true;
+      } else {
+        setError('Failed to update profile');
+        return false;
+      }
+    } catch (err: any) {
+      setError(err.message || 'Failed to update profile');
+      return false;
+    } finally {
+      setIsUpdating(false);
+    }
+  }, [updateProfile]);
+
+  const handleChangePassword = useCallback(async (passwordData: any) => {
+    setIsChangingPassword(true);
+    setError(null);
+    setSuccess(null);
+
+    try {
+      const success = await changePassword(passwordData);
+      
+      if (success) {
+        setSuccess('Password changed successfully');
+        return true;
+      } else {
+        setError('Failed to change password');
+        return false;
+      }
+    } catch (err: any) {
+      setError(err.message || 'Failed to change password');
+      return false;
+    } finally {
+      setIsChangingPassword(false);
+    }
+  }, [changePassword]);
+
+  const clearMessages = useCallback(() => {
+    setError(null);
+    setSuccess(null);
+  }, []);
+
+  return {
+    user,
+    updateProfile: handleUpdateProfile,
+    changePassword: handleChangePassword,
+    refreshProfile: refreshUserProfile,
+    isUpdating,
+    isChangingPassword,
+    error,
+    success,
+    clearMessages
+  };
 };

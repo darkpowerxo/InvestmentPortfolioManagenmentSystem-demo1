@@ -26,6 +26,90 @@ export interface User {
   lastLoginAt?: string;
 }
 
+// Authentication Types
+export interface AuthUser {
+  id: number;
+  firstName: string;
+  lastName: string;
+  email: string;
+  role: UserRole;
+  department?: string;
+  phoneNumber?: string;
+  preferences?: UserPreferences;
+}
+
+export interface UserPreferences {
+  language: string;
+  theme: 'light' | 'dark';
+  dateFormat: string;
+  currencyFormat: string;
+  notifications: NotificationSettings;
+}
+
+export interface NotificationSettings {
+  emailNotifications: boolean;
+  systemAlerts: boolean;
+  portfolioUpdates: boolean;
+  marketNews: boolean;
+}
+
+export interface LoginRequest {
+  email: string;
+  password: string;
+  rememberMe?: boolean;
+}
+
+export interface LoginResponse {
+  token: string;
+  refreshToken: string;
+  user: AuthUser;
+  expiresAt: string;
+}
+
+export interface RegisterRequest {
+  firstName: string;
+  lastName: string;
+  email: string;
+  password: string;
+  confirmPassword: string;
+  role: UserRole;
+  department?: string;
+  phoneNumber?: string;
+}
+
+export interface AuthState {
+  isAuthenticated: boolean;
+  user: AuthUser | null;
+  token: string | null;
+  refreshToken: string | null;
+  isLoading: boolean;
+  error: string | null;
+}
+
+export interface PasswordResetRequest {
+  email: string;
+}
+
+export interface PasswordResetConfirm {
+  token: string;
+  newPassword: string;
+  confirmPassword: string;
+}
+
+export interface ChangePasswordRequest {
+  currentPassword: string;
+  newPassword: string;
+  confirmPassword: string;
+}
+
+export interface UpdateProfileRequest {
+  firstName: string;
+  lastName: string;
+  phoneNumber?: string;
+  department?: string;
+  preferences?: UserPreferences;
+}
+
 export enum UserRole {
   PortfolioManager = 'PortfolioManager',
   Analyst = 'Analyst',
