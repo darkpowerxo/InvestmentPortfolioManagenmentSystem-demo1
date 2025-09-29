@@ -324,8 +324,8 @@ namespace InvestmentPortfolioManager.Application.Services.Reports
             summaryTable.AddHeaderCell(CreateHeaderCell(_localizer["Target"]));
 
             var totalValue = positions.Sum(p => p.MarketValue);
-            var equityValue = positions.Where(p => p.Security?.SecurityType == SecurityType.Equity).Sum(p => p.MarketValue);
-            var bondValue = positions.Where(p => p.Security?.SecurityType == SecurityType.Bond).Sum(p => p.MarketValue);
+            var equityValue = positions.Where(p => p.Security?.Type == SecurityType.Equity).Sum(p => p.MarketValue);
+            var bondValue = positions.Where(p => p.Security?.Type == SecurityType.Bond).Sum(p => p.MarketValue);
 
             summaryTable.AddCell(CreateDataCell(_localizer["TotalValue"]));
             summaryTable.AddCell(CreateDataCell(FormatCurrency(totalValue, portfolio.BaseCurrency)));
@@ -462,7 +462,7 @@ namespace InvestmentPortfolioManager.Application.Services.Reports
             document.Add(new Paragraph().SetMarginBottom(15));
         }
 
-        private void AddRiskMetrics(Document document, PerformanceMetrics? metrics)
+        private void AddRiskMetrics(Document document, PerformanceMetric? metrics)
         {
             if (metrics == null) return;
 

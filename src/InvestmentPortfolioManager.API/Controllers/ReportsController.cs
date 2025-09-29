@@ -10,10 +10,12 @@ namespace InvestmentPortfolioManager.API.Controllers
     public class ReportsController : ControllerBase
     {
         private readonly IPdfReportService _pdfReportService;
+        private readonly IExcelExportService _excelExportService;
 
-        public ReportsController(IPdfReportService pdfReportService)
+        public ReportsController(IPdfReportService pdfReportService, IExcelExportService excelExportService)
         {
             _pdfReportService = pdfReportService;
+            _excelExportService = excelExportService;
         }
 
         /// <summary>
@@ -146,6 +148,172 @@ namespace InvestmentPortfolioManager.API.Controllers
                 return StatusCode(500, $"Error generating multi-portfolio summary: {ex.Message}");
             }
         }
+
+        #region Excel Export Endpoints
+
+        /// <summary>
+        /// Export complete portfolio data to Excel
+        /// </summary>
+        [HttpGet("portfolio/{portfolioId}/excel")]
+        public async Task<IActionResult> ExportPortfolioToExcel(
+            int portfolioId,
+            [FromQuery] DateTime? asOfDate = null)
+        {
+            try
+            {
+                var date = asOfDate ?? DateTime.Now;
+                var excelBytes = await _excelExportService.ExportPortfolioDataAsync(portfolioId, date);
+                
+                return File(excelBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", 
+                    $"portfolio_data_{portfolioId}_{date:yyyyMMdd}.xlsx");
+            }
+            catch (ArgumentException ex)
+            {
+                return NotFound(ex.Message);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Error exporting portfolio data: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// Export transactions to Excel
+        /// </summary>
+        [HttpGet("portfolio/{portfolioId}/transactions/excel")]
+        public async Task<IActionResult> ExportTransactionsToExcel(
+            int portfolioId,
+            [FromQuery] DateTime? startDate = null,
+            [FromQuery] DateTime? endDate = null)
+        {
+            try
+            {
+                var start = startDate ?? DateTime.Now.AddMonths(-6);
+                var end = endDate ?? DateTime.Now;
+
+                var excelBytes = await _excelExportService.ExportTransactionsAsync(portfolioId, start, end);
+                
+                return File(excelBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", 
+                    $"transactions_{portfolioId}_{start:yyyyMMdd}_{end:yyyyMMdd}.xlsx");
+            }
+            catch (ArgumentException ex)
+            {
+                return NotFound(ex.Message);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Error exporting transactions: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// Export performance metrics to Excel
+        /// </summary>
+        [HttpGet("portfolio/{portfolioId}/performance/excel")]
+        public async Task<IActionResult> ExportPerformanceToExcel(
+            int portfolioId,
+            [FromQuery] DateTime? startDate = null,
+            [FromQuery] DateTime? endDate = null)
+        {
+            try
+            {
+                var start = startDate ?? DateTime.Now.AddYears(-1);
+                var end = endDate ?? DateTime.Now;
+
+                var excelBytes = await _excelExportService.ExportPerformanceMetricsAsync(portfolioId, start, end);
+                
+                return File(excelBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", 
+                    $"performance_metrics_{portfolioId}_{start:yyyyMMdd}_{end:yyyyMMdd}.xlsx");
+            }
+            catch (ArgumentException ex)
+            {
+                return NotFound(ex.Message);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Error exporting performance metrics: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// Export positions to Excel
+        /// </summary>
+        [HttpGet("portfolio/{portfolioId}/positions/excel")]
+        public async Task<IActionResult> ExportPositionsToExcel(
+            int portfolioId,
+            [FromQuery] DateTime? asOfDate = null)
+        {
+            try
+            {
+                var date = asOfDate ?? DateTime.Now;
+                var excelBytes = await _excelExportService.ExportPositionsAsync(portfolioId, date);
+                
+                return File(excelBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", 
+                    $"positions_{portfolioId}_{date:yyyyMMdd}.xlsx");
+            }
+            catch (ArgumentException ex)
+            {
+                return NotFound(ex.Message);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Error exporting positions: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// Export risk analysis to Excel
+        /// </summary>
+        [HttpGet("portfolio/{portfolioId}/risk-analysis/excel")]
+        public async Task<IActionResult> ExportRiskAnalysisToExcel(
+            int portfolioId,
+            [FromQuery] DateTime? asOfDate = null)
+        {
+            try
+            {
+                var date = asOfDate ?? DateTime.Now;
+                var excelBytes = await _excelExportService.ExportRiskAnalysisAsync(portfolioId, date);
+                
+                return File(excelBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", 
+                    $"risk_analysis_{portfolioId}_{date:yyyyMMdd}.xlsx");
+            }
+            catch (ArgumentException ex)
+            {
+                return NotFound(ex.Message);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Error exporting risk analysis: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// Export multi-portfolio summary to Excel
+        /// </summary>
+        [HttpPost("multi-portfolio-summary/excel")]
+        public async Task<IActionResult> ExportMultiPortfolioSummaryToExcel(
+            [FromBody] MultiPortfolioSummaryRequest request)
+        {
+            try
+            {
+                if (request.PortfolioIds == null || !request.PortfolioIds.Any())
+                {
+                    return BadRequest("Portfolio IDs are required");
+                }
+
+                var date = request.AsOfDate ?? DateTime.Now;
+                var excelBytes = await _excelExportService.ExportMultiPortfolioSummaryAsync(request.PortfolioIds, date);
+                
+                return File(excelBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", 
+                    $"multi_portfolio_summary_{date:yyyyMMdd}.xlsx");
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Error exporting multi-portfolio summary: {ex.Message}");
+            }
+        }
+
+        #endregion
     }
 
     public class MultiPortfolioSummaryRequest
