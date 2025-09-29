@@ -7,6 +7,7 @@ using iText.Layout.Borders;
 using iText.Kernel.Font;
 using iText.IO.Font.Constants;
 using InvestmentPortfolioManager.Domain.Entities;
+using InvestmentPortfolioManager.Domain.Enums;
 using InvestmentPortfolioManager.Application.Services.Contracts;
 using Microsoft.Extensions.Localization;
 
@@ -324,7 +325,7 @@ namespace InvestmentPortfolioManager.Application.Services.Reports
             summaryTable.AddHeaderCell(CreateHeaderCell(_localizer["Target"]));
 
             var totalValue = positions.Sum(p => p.MarketValue);
-            var equityValue = positions.Where(p => p.Security?.Type == SecurityType.Equity).Sum(p => p.MarketValue);
+            var equityValue = positions.Where(p => p.Security?.Type == SecurityType.Stock || p.Security?.Type == SecurityType.ETF).Sum(p => p.MarketValue);
             var bondValue = positions.Where(p => p.Security?.Type == SecurityType.Bond).Sum(p => p.MarketValue);
 
             summaryTable.AddCell(CreateDataCell(_localizer["TotalValue"]));
@@ -531,7 +532,7 @@ namespace InvestmentPortfolioManager.Application.Services.Reports
                 summaryTable.AddCell(CreateDataCell(portfolio.Type.ToString()));
                 summaryTable.AddCell(CreateDataCell(FormatCurrency(portfolio.CurrentValue, portfolio.BaseCurrency)));
                 summaryTable.AddCell(CreateDataCell(portfolio.RiskLevel.ToString()));
-                summaryTable.AddCell(CreateDataCell(portfolio.UpdatedAt?.ToString("yyyy-MM-dd") ?? "N/A"));
+                summaryTable.AddCell(CreateDataCell(portfolio.UpdatedAt.ToString("yyyy-MM-dd")));
             }
 
             // Add totals

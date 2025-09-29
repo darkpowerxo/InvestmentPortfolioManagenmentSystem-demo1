@@ -2,6 +2,7 @@ using OfficeOpenXml;
 using OfficeOpenXml.Drawing.Chart;
 using OfficeOpenXml.Style;
 using InvestmentPortfolioManager.Domain.Entities;
+using InvestmentPortfolioManager.Domain.Enums;
 using InvestmentPortfolioManager.Application.Services.Contracts;
 using Microsoft.Extensions.Localization;
 using System.Drawing;
@@ -171,7 +172,7 @@ namespace InvestmentPortfolioManager.Application.Services.Reports
 
             // Portfolio Metrics
             var totalValue = positions.Sum(p => p.MarketValue);
-            var equityValue = positions.Where(p => p.Security?.Type == SecurityType.Equity).Sum(p => p.MarketValue);
+            var equityValue = positions.Where(p => p.Security?.Type == SecurityType.Stock || p.Security?.Type == SecurityType.ETF).Sum(p => p.MarketValue);
             var bondValue = positions.Where(p => p.Security?.Type == SecurityType.Bond).Sum(p => p.MarketValue);
 
             AddKeyValuePair(worksheet, ref row, _localizer["TotalValue"], FormatCurrency(totalValue, portfolio.BaseCurrency));

@@ -1,5 +1,6 @@
 using InvestmentPortfolioManager.Application.Services;
 using InvestmentPortfolioManager.Application.Services.Contracts;
+using InvestmentPortfolioManager.Application.Services.Reports;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace InvestmentPortfolioManager.Application.Extensions;
@@ -22,6 +23,17 @@ public static class ServiceCollectionExtensions
         // Authentication services
         services.AddScoped<IAuthenticationService, AuthenticationService>();
         services.AddScoped<IPasswordHasher, PasswordHasher>();
+
+        // Reporting services
+        services.AddScoped<IPdfReportService, PdfReportService>();
+        services.AddScoped<IExcelExportService, ExcelExportService>();
+        services.AddScoped<IDashboardService, DashboardService>();
+
+        // Business service interfaces (to be implemented)
+        services.AddScoped<IPortfolioService, PortfolioService>();
+        services.AddScoped<IPositionService, PositionService>();
+        services.AddScoped<ITransactionService, TransactionService>();
+        services.AddScoped<IPerformanceMetricsService, PerformanceMetricsService>();
 
         return services;
     }
