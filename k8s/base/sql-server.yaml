@@ -1,0 +1,103 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: sql-server
+  labels:
+    app.kubernetes.io/name: investment-portfolio-manager
+    app.kubernetes.io/component: database
+    app.kubernetes.io/instance: sql-server
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: investment-portfolio-manager
+      app.kubernetes.io/component: database
+      app.kubernetes.io/instance: sql-server
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: investment-portfolio-manager
+        app.kubernetes.io/component: database
+        app.kubernetes.io/instance: sql-server
+    spec:
+      containers:
+      - name: sql-server
+        image: mcr.microsoft.com/mssql/server:2022-latest
+        ports:
+        - containerPort: 1433
+          name: mssql
+        env:
+        - name: ACCEPT_EULA
+          value: "Y"
+        - name: MSSQL_SA_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: api-secrets
+              key: SA_PASSWORD
+        - name: MSSQL_PID
+          value: "Express"
+        - name: MSSQL_TCP_PORT
+          value: "1433"
+        - name: MSSQL_MEMORY_LIMIT_MB
+          value: "2048"
+        resources:
+          requests:
+            memory: "2Gi"
+            cpu: "500m"
+          limits:
+            memory: "4Gi"
+            cpu: "2000m"
+        volumeMounts:
+        - name: mssql-data
+          mountPath: /var/opt/mssql
+        - name: mssql-log
+          mountPath: /var/opt/mssql/log
+        livenessProbe:
+          tcpSocket:
+            port: 1433
+          initialDelaySeconds: 60
+          periodSeconds: 30
+          timeoutSeconds: 10
+        readinessProbe:
+          exec:
+            command:
+            - /opt/mssql-tools/bin/sqlcmd
+            - -S
+            - localhost
+            - -U
+            - sa
+            - -P
+            - $(MSSQL_SA_PASSWORD)
+            - -Q
+            - SELECT 1
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+      volumes:
+      - name: mssql-data
+        persistentVolumeClaim:
+          claimName: sql-server-data-pvc
+      - name: mssql-log
+        persistentVolumeClaim:
+          claimName: sql-server-log-pvc
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: sql-server-service
+  labels:
+    app.kubernetes.io/name: investment-portfolio-manager
+    app.kubernetes.io/component: database
+    app.kubernetes.io/instance: sql-server
+spec:
+  selector:
+    app.kubernetes.io/name: investment-portfolio-manager
+    app.kubernetes.io/component: database
+    app.kubernetes.io/instance: sql-server
+  ports:
+  - port: 1433
+    targetPort: 1433
+    name: mssql
+  type: ClusterIP

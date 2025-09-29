@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: api-config
+data:
+  ASPNETCORE_ENVIRONMENT: Development
+  JwtSettings__Issuer: https://dev-api.portfolio.cdpq.com
+  Cors__AllowedOrigins__0: https://dev-portfolio.cdpq.com
+  Cors__AllowedOrigins__1: http://localhost:3000
+  Cors__AllowedOrigins__2: http://localhost:5173
+  Logging__LogLevel__Default: Debug
+  Logging__LogLevel__Microsoft.AspNetCore: Information
+  Features__EnableSwagger: "true"
+  Features__EnableDetailedErrors: "true"

@@ -1,0 +1,44 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+metadata:
+  name: investment-portfolio-manager-base
+  labels:
+    app.kubernetes.io/name: investment-portfolio-manager
+
+resources:
+- namespace.yaml
+- configmap.yaml
+- secret.yaml
+- persistent-volumes.yaml
+- sql-server.yaml
+- redis.yaml
+- api.yaml
+- ingress.yaml
+- hpa.yaml
+- network-policy.yaml
+
+commonLabels:
+  app.kubernetes.io/name: investment-portfolio-manager
+  app.kubernetes.io/version: "1.0.0"
+  app.kubernetes.io/managed-by: kustomize
+
+images:
+- name: portfolio-api
+  newTag: latest
+
+configMapGenerator:
+- name: app-info
+  literals:
+  - APP_VERSION=1.0.0
+  - BUILD_DATE=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+  - GIT_COMMIT=main
+
+secretGenerator:
+- name: generated-secrets
+  type: Opaque
+  options:
+    disableNameSuffixHash: true
+  literals: []
+
+namespace: portfolio-management

@@ -1,0 +1,19 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: portfolio-management
+  labels:
+    app.kubernetes.io/name: investment-portfolio-manager
+    app.kubernetes.io/instance: cdpq
+    app.kubernetes.io/component: namespace
+    app.kubernetes.io/managed-by: kubectl
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: portfolio-management-dev
+  labels:
+    app.kubernetes.io/name: investment-portfolio-manager
+    app.kubernetes.io/instance: cdpq-dev
+    app.kubernetes.io/component: namespace
+    app.kubernetes.io/managed-by: kubectl

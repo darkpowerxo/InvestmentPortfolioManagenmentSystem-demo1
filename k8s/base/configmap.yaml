@@ -1,0 +1,29 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: api-config
+  labels:
+    app.kubernetes.io/name: investment-portfolio-manager
+    app.kubernetes.io/component: api
+data:
+  ASPNETCORE_ENVIRONMENT: Production
+  ConnectionStrings__DefaultConnection: Server=sql-server-service,1433;Database=InvestmentPortfolioDB;User Id=sa;TrustServerCertificate=true;
+  ConnectionStrings__RedisConnection: redis-service:6379
+  JwtSettings__Issuer: https://api.portfolio.cdpq.com
+  JwtSettings__Audience: portfolio-api
+  JwtSettings__ExpirationMinutes: "60"
+  JwtSettings__RefreshTokenExpirationDays: "7"
+  Logging__LogLevel__Default: Information
+  Logging__LogLevel__Microsoft.AspNetCore: Warning
+  AllowedHosts: "*"
+  Cors__AllowedOrigins__0: https://portfolio.cdpq.com
+  Cors__AllowedOrigins__1: https://www.cdpq.com
+  ReportSettings__OutputDirectory: /app/reports
+  ReportSettings__TemplateDirectory: /app/templates
+  Features__EnablePdfReports: "true"
+  Features__EnableExcelReports: "true"
+  Features__EnableDataValidation: "true"
+  Features__EnableAuditLogging: "true"
+  Localization__DefaultCulture: en-CA
+  Localization__SupportedCultures__0: en-CA
+  Localization__SupportedCultures__1: fr-CA

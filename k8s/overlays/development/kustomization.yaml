@@ -1,0 +1,50 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+metadata:
+  name: investment-portfolio-manager-development
+
+resources:
+- ../../base
+
+namespace: portfolio-management-dev
+
+namePrefix: dev-
+
+commonLabels:
+  environment: development
+  app.kubernetes.io/instance: cdpq-dev
+
+images:
+- name: portfolio-api
+  newTag: dev-latest
+
+patchesStrategicMerge:
+- api-patch.yaml
+- configmap-patch.yaml
+- ingress-patch.yaml
+
+configMapGenerator:
+- name: dev-config
+  behavior: merge
+  literals:
+  - ASPNETCORE_ENVIRONMENT=Development
+  - Logging__LogLevel__Default=Debug
+  - Features__EnableSwagger=true
+  - Features__EnableDetailedErrors=true
+
+replicas:
+- name: api
+  count: 1
+
+patches:
+- target:
+    kind: HorizontalPodAutoscaler
+    name: api-hpa
+  patch: |-
+    - op: replace
+      path: /spec/minReplicas
+      value: 1
+    - op: replace
+      path: /spec/maxReplicas
+      value: 3

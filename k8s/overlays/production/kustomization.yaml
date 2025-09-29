@@ -1,0 +1,74 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+metadata:
+  name: investment-portfolio-manager-production
+
+resources:
+- ../../base
+
+namespace: portfolio-management
+
+namePrefix: prod-
+
+commonLabels:
+  environment: production
+  app.kubernetes.io/instance: cdpq-prod
+
+images:
+- name: portfolio-api
+  newTag: v1.0.0
+
+patchesStrategicMerge:
+- api-patch.yaml
+- configmap-patch.yaml
+- ingress-patch.yaml
+- security-patch.yaml
+
+configMapGenerator:
+- name: prod-config
+  behavior: merge
+  literals:
+  - ASPNETCORE_ENVIRONMENT=Production
+  - Logging__LogLevel__Default=Warning
+  - Features__EnableSwagger=false
+  - Features__EnableDetailedErrors=false
+  - Features__EnableMetrics=true
+  - Features__EnableTracing=true
+
+replicas:
+- name: api
+  count: 3
+
+patches:
+- target:
+    kind: HorizontalPodAutoscaler
+    name: api-hpa
+  patch: |-
+    - op: replace
+      path: /spec/minReplicas
+      value: 3
+    - op: replace
+      path: /spec/maxReplicas
+      value: 20
+- target:
+    kind: Deployment
+    name: sql-server
+  patch: |-
+    - op: replace
+      path: /spec/template/spec/containers/0/env/2/value
+      value: "Developer"
+- target:
+    kind: PersistentVolumeClaim
+    name: sql-server-data-pvc
+  patch: |-
+    - op: replace
+      path: /spec/resources/requests/storage
+      value: 100Gi
+- target:
+    kind: PersistentVolumeClaim
+    name: api-reports-pvc
+  patch: |-
+    - op: replace
+      path: /spec/resources/requests/storage
+      value: 50Gi
