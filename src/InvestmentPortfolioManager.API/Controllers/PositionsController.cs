@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using InvestmentPortfolioManager.Infrastructure.Repositories.Contracts;
 using InvestmentPortfolioManager.Application.DTOs;
 using InvestmentPortfolioManager.API.Extensions;
+using System.Linq;
 
 namespace InvestmentPortfolioManager.API.Controllers
 {
@@ -39,7 +40,7 @@ namespace InvestmentPortfolioManager.API.Controllers
         {
             try
             {
-                var positions = await _unitOfWork.Positions.GetAllWithDetailsAsync();
+                var positions = await _unitOfWork.Positions.GetAllAsync();
 
                 // Apply filtering
                 if (portfolioId.HasValue)
@@ -57,20 +58,16 @@ namespace InvestmentPortfolioManager.API.Controllers
                     positions = positions.Where(p => p.Security?.Symbol.Equals(securitySymbol, StringComparison.OrdinalIgnoreCase) == true).ToList();
                 }
 
-                // Calculate market values for filtering
-                var positionsWithValues = positions.Select(p => new
-                {
-                    Position = p,
-                    MarketValue = p.Quantity * (p.Security?.CurrentPrice ?? 0),
-                    PortfolioTotalValue = p.Portfolio?.Positions?.Sum(pos => pos.Quantity * (pos.Security?.CurrentPrice ?? 0)) ?? 0
-                }).ToList();
-
-                // Calculate weights and apply value filters
-                positionsWithValues = positionsWithValues.Select(p => new
-                {
-                    p.Position,
-                    p.MarketValue,
-                    Weight = p.PortfolioTotalValue > 0 ? (p.MarketValue / p.PortfolioTotalValue) * 100 : 0
+                // Calculate market values and weights for filtering
+                var positionsWithValues = positions.Select(p => {
+                    var marketValue = p.Quantity * (p.Security?.CurrentPrice ?? 0);
+                    var portfolioTotalValue = p.Portfolio?.Positions?.Sum(pos => pos.Quantity * (pos.Security?.CurrentPrice ?? 0)) ?? 0;
+                    return new
+                    {
+                        Position = p,
+                        MarketValue = marketValue,
+                        Weight = portfolioTotalValue > 0 ? (marketValue / portfolioTotalValue) * 100 : 0
+                    };
                 }).ToList();
 
                 if (minValue.HasValue)
@@ -141,7 +138,7 @@ namespace InvestmentPortfolioManager.API.Controllers
         {
             try
             {
-                var position = await _unitOfWork.Positions.GetByIdWithDetailsAsync(id);
+                var position = await _unitOfWork.Positions.GetByIdAsync(id);
                 if (position == null)
                 {
                     return NotFound<PositionDto>($"Position with ID {id} not found");
@@ -163,7 +160,7 @@ namespace InvestmentPortfolioManager.API.Controllers
         {
             try
             {
-                var positions = await _unitOfWork.Positions.GetByPortfolioIdAsync(portfolioId);
+                var positions = await _unitOfWork.Positions.GetPositionsByPortfolioIdAsync(portfolioId);
                 
                 // Calculate portfolio total for weights
                 var portfolioTotal = positions.Sum(p => p.Quantity * (p.Security?.CurrentPrice ?? 0));
@@ -191,7 +188,7 @@ namespace InvestmentPortfolioManager.API.Controllers
         {
             try
             {
-                var positions = await _unitOfWork.Positions.GetBySecurityIdAsync(securityId);
+                var positions = await _unitOfWork.Positions.GetPositionsBySecurityIdAsync(securityId);
                 var positionDtos = positions.Select(p => p.ToDto()).ToList();
 
                 return Success(positionDtos);
@@ -253,7 +250,7 @@ namespace InvestmentPortfolioManager.API.Controllers
                 }
 
                 // Check if position already exists for this portfolio-security combination
-                var existingPositions = await _unitOfWork.Positions.GetByPortfolioIdAsync(createPositionDto.PortfolioId);
+                var existingPositions = await _unitOfWork.Positions.GetPositionsByPortfolioIdAsync(createPositionDto.PortfolioId);
                 if (existingPositions.Any(p => p.SecurityId == createPositionDto.SecurityId))
                 {
                     return Error<PositionDto>("A position already exists for this security in this portfolio", statusCode: 409);
@@ -264,7 +261,7 @@ namespace InvestmentPortfolioManager.API.Controllers
                 await _unitOfWork.SaveChangesAsync();
 
                 // Reload with details
-                var createdPosition = await _unitOfWork.Positions.GetByIdWithDetailsAsync(position.Id);
+                var createdPosition = await _unitOfWork.Positions.GetByIdAsync(position.Id);
                 return Success(createdPosition!.ToDto(), "Position created successfully");
             }
             catch (Exception ex)
@@ -298,7 +295,7 @@ namespace InvestmentPortfolioManager.API.Controllers
                 await _unitOfWork.SaveChangesAsync();
 
                 // Reload with details
-                var updatedPosition = await _unitOfWork.Positions.GetByIdWithDetailsAsync(id);
+                var updatedPosition = await _unitOfWork.Positions.GetByIdAsync(id);
                 return Success(updatedPosition!.ToDto(), "Position updated successfully");
             }
             catch (Exception ex)
@@ -324,7 +321,7 @@ namespace InvestmentPortfolioManager.API.Controllers
                 await _unitOfWork.Positions.DeleteAsync(position);
                 await _unitOfWork.SaveChangesAsync();
 
-                return Success<object>(null, "Position deleted successfully");
+                return Success<object>(new { }, "Position deleted successfully");
             }
             catch (Exception ex)
             {
@@ -340,7 +337,8 @@ namespace InvestmentPortfolioManager.API.Controllers
         {
             try
             {
-                var topPositions = await _unitOfWork.Positions.GetTopPositionsByValueAsync(count);
+                var allPositions = await _unitOfWork.Positions.GetAllAsync();
+                var topPositions = allPositions.OrderByDescending(p => p.MarketValue).Take(count);
                 var positionDtos = topPositions.Select(p => p.ToDto()).ToList();
 
                 return Success(positionDtos);
@@ -359,7 +357,7 @@ namespace InvestmentPortfolioManager.API.Controllers
         {
             try
             {
-                var allPositions = await _unitOfWork.Positions.GetAllWithDetailsAsync();
+                var allPositions = await _unitOfWork.Positions.GetAllAsync();
                 
                 var positionsWithGains = allPositions.Select(p => new
                 {

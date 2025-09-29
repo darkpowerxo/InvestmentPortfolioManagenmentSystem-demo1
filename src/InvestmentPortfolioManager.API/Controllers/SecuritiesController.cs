@@ -3,6 +3,7 @@ using InvestmentPortfolioManager.Infrastructure.Repositories.Contracts;
 using InvestmentPortfolioManager.Application.DTOs;
 using InvestmentPortfolioManager.API.Extensions;
 using InvestmentPortfolioManager.Domain.Enums;
+using System.Linq;
 
 namespace InvestmentPortfolioManager.API.Controllers
 {
@@ -40,7 +41,8 @@ namespace InvestmentPortfolioManager.API.Controllers
         {
             try
             {
-                var securities = await _unitOfWork.Securities.GetAllWithMarketDataAsync();
+                var allSecurities = await _unitOfWork.Securities.GetAllAsync();
+                List<InvestmentPortfolioManager.Domain.Entities.Security> securities = allSecurities.ToList();
 
                 // Apply filtering
                 if (!string.IsNullOrWhiteSpace(searchTerm))
@@ -126,7 +128,7 @@ namespace InvestmentPortfolioManager.API.Controllers
         {
             try
             {
-                var security = await _unitOfWork.Securities.GetByIdWithMarketDataAsync(id);
+                var security = await _unitOfWork.Securities.GetByIdAsync(id);
                 if (security == null)
                 {
                     return NotFound<SecurityDto>($"Security with ID {id} not found");
@@ -170,7 +172,7 @@ namespace InvestmentPortfolioManager.API.Controllers
         {
             try
             {
-                var securities = await _unitOfWork.Securities.GetByExchangeAsync(exchange);
+                var securities = await _unitOfWork.Securities.GetSecuritiesByExchangeAsync(exchange);
                 var securityDtos = securities.Select(s => s.ToDto()).ToList();
 
                 return Success(securityDtos);
@@ -189,7 +191,7 @@ namespace InvestmentPortfolioManager.API.Controllers
         {
             try
             {
-                var securities = await _unitOfWork.Securities.GetBySectorAsync(sector);
+                var securities = await _unitOfWork.Securities.GetSecuritiesBySectorAsync(sector);
                 var securityDtos = securities.Select(s => s.ToDto()).ToList();
 
                 return Success(securityDtos);
@@ -208,7 +210,7 @@ namespace InvestmentPortfolioManager.API.Controllers
         {
             try
             {
-                var securities = await _unitOfWork.Securities.GetByTypeAsync(type);
+                var securities = await _unitOfWork.Securities.GetSecuritiesByTypeAsync(type);
                 var securityDtos = securities.Select(s => s.ToDto()).ToList();
 
                 return Success(securityDtos);
@@ -299,7 +301,7 @@ namespace InvestmentPortfolioManager.API.Controllers
                 }
 
                 // Check if security has associated positions
-                var positions = await _unitOfWork.Positions.GetBySecurityIdAsync(id);
+                var positions = await _unitOfWork.Positions.GetPositionsBySecurityIdAsync(id);
                 if (positions.Any())
                 {
                     return Error<object>("Cannot delete security with existing positions", statusCode: 409);
@@ -308,7 +310,7 @@ namespace InvestmentPortfolioManager.API.Controllers
                 await _unitOfWork.Securities.DeleteAsync(security);
                 await _unitOfWork.SaveChangesAsync();
 
-                return Success<object>(null, "Security deleted successfully");
+                return Success<object>(new { }, "Security deleted successfully");
             }
             catch (Exception ex)
             {
@@ -371,7 +373,8 @@ namespace InvestmentPortfolioManager.API.Controllers
         {
             try
             {
-                var securities = await _unitOfWork.Securities.GetHighPricedSecuritiesAsync(threshold);
+                var allSecurities = await _unitOfWork.Securities.GetAllAsync();
+                var securities = allSecurities.Where(s => s.CurrentPrice >= threshold);
                 var securityDtos = securities.Select(s => s.ToDto()).ToList();
 
                 return Success(securityDtos);

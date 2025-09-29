@@ -3,6 +3,7 @@ using InvestmentPortfolioManager.Infrastructure.Repositories.Contracts;
 using InvestmentPortfolioManager.Application.DTOs;
 using InvestmentPortfolioManager.API.Extensions;
 using InvestmentPortfolioManager.Domain.Enums;
+using System.Linq;
 
 namespace InvestmentPortfolioManager.API.Controllers
 {
@@ -41,7 +42,8 @@ namespace InvestmentPortfolioManager.API.Controllers
         {
             try
             {
-                var transactions = await _unitOfWork.Transactions.GetAllWithDetailsAsync();
+                var allTransactions = await _unitOfWork.Transactions.GetAllAsync();
+                List<InvestmentPortfolioManager.Domain.Entities.Transaction> transactions = allTransactions.ToList();
 
                 // Apply filtering
                 if (portfolioId.HasValue)
@@ -129,7 +131,7 @@ namespace InvestmentPortfolioManager.API.Controllers
         {
             try
             {
-                var transaction = await _unitOfWork.Transactions.GetByIdWithDetailsAsync(id);
+                var transaction = await _unitOfWork.Transactions.GetByIdAsync(id);
                 if (transaction == null)
                 {
                     return NotFound<TransactionDto>($"Transaction with ID {id} not found");
@@ -151,7 +153,7 @@ namespace InvestmentPortfolioManager.API.Controllers
         {
             try
             {
-                var transactions = await _unitOfWork.Transactions.GetByPortfolioIdAsync(portfolioId);
+                var transactions = await _unitOfWork.Transactions.GetTransactionsByPortfolioIdAsync(portfolioId);
                 var transactionDtos = transactions.Select(t => t.ToDto()).ToList();
 
                 return Success(transactionDtos);
@@ -170,7 +172,7 @@ namespace InvestmentPortfolioManager.API.Controllers
         {
             try
             {
-                var transactions = await _unitOfWork.Transactions.GetBySecurityIdAsync(securityId);
+                var transactions = await _unitOfWork.Transactions.GetTransactionsBySecurityIdAsync(securityId);
                 var transactionDtos = transactions.Select(t => t.ToDto()).ToList();
 
                 return Success(transactionDtos);
@@ -189,7 +191,7 @@ namespace InvestmentPortfolioManager.API.Controllers
         {
             try
             {
-                var transactions = await _unitOfWork.Transactions.GetByTypeAsync(type);
+                var transactions = await _unitOfWork.Transactions.GetTransactionsByTypeAsync(type);
                 var transactionDtos = transactions.Select(t => t.ToDto()).ToList();
 
                 return Success(transactionDtos);
@@ -210,7 +212,7 @@ namespace InvestmentPortfolioManager.API.Controllers
         {
             try
             {
-                var transactions = await _unitOfWork.Transactions.GetByDateRangeAsync(startDate, endDate);
+                var transactions = await _unitOfWork.Transactions.GetTransactionsByDateRangeAsync(startDate, endDate);
                 var transactionDtos = transactions.Select(t => t.ToDto()).ToList();
 
                 return Success(transactionDtos);
@@ -258,7 +260,7 @@ namespace InvestmentPortfolioManager.API.Controllers
                 await _unitOfWork.SaveChangesAsync();
 
                 // Reload with details
-                var createdTransaction = await _unitOfWork.Transactions.GetByIdWithDetailsAsync(transaction.Id);
+                var createdTransaction = await _unitOfWork.Transactions.GetByIdAsync(transaction.Id);
                 return Success(createdTransaction!.ToDto(), "Transaction created successfully");
             }
             catch (Exception ex)
@@ -292,7 +294,7 @@ namespace InvestmentPortfolioManager.API.Controllers
                 await _unitOfWork.SaveChangesAsync();
 
                 // Reload with details
-                var updatedTransaction = await _unitOfWork.Transactions.GetByIdWithDetailsAsync(id);
+                var updatedTransaction = await _unitOfWork.Transactions.GetByIdAsync(id);
                 return Success(updatedTransaction!.ToDto(), "Transaction updated successfully");
             }
             catch (Exception ex)
@@ -318,7 +320,7 @@ namespace InvestmentPortfolioManager.API.Controllers
                 await _unitOfWork.Transactions.DeleteAsync(transaction);
                 await _unitOfWork.SaveChangesAsync();
 
-                return Success<object>(null, "Transaction deleted successfully");
+                return Success<object>(new { }, "Transaction deleted successfully");
             }
             catch (Exception ex)
             {
@@ -334,7 +336,8 @@ namespace InvestmentPortfolioManager.API.Controllers
         {
             try
             {
-                var largeTransactions = await _unitOfWork.Transactions.GetLargeTransactionsAsync(threshold);
+                var allTransactions = await _unitOfWork.Transactions.GetAllAsync();
+                var largeTransactions = allTransactions.Where(t => Math.Abs(t.Quantity * t.Price) >= threshold);
                 var transactionDtos = largeTransactions.Select(t => t.ToDto()).ToList();
 
                 return Success(transactionDtos);
@@ -356,7 +359,7 @@ namespace InvestmentPortfolioManager.API.Controllers
                 var startDate = DateTime.UtcNow.AddDays(-days);
                 var endDate = DateTime.UtcNow;
                 
-                var recentTransactions = await _unitOfWork.Transactions.GetByDateRangeAsync(startDate, endDate);
+                var recentTransactions = await _unitOfWork.Transactions.GetTransactionsByDateRangeAsync(startDate, endDate);
                 var transactionDtos = recentTransactions.OrderByDescending(t => t.TransactionDate).Select(t => t.ToDto()).ToList();
 
                 return Success(transactionDtos);
@@ -381,20 +384,21 @@ namespace InvestmentPortfolioManager.API.Controllers
                 var start = startDate ?? DateTime.UtcNow.AddMonths(-1);
                 var end = endDate ?? DateTime.UtcNow;
 
-                var transactions = await _unitOfWork.Transactions.GetByDateRangeAsync(start, end);
+                var transactions = await _unitOfWork.Transactions.GetTransactionsByDateRangeAsync(start, end);
 
                 if (portfolioId.HasValue)
                 {
                     transactions = transactions.Where(t => t.PortfolioId == portfolioId.Value).ToList();
                 }
 
+                var transactionsList = transactions.ToList();
                 var summary = new
                 {
-                    TotalTransactions = transactions.Count,
-                    TotalVolume = transactions.Sum(t => Math.Abs(t.NetAmount)),
-                    TotalCommissions = transactions.Sum(t => t.Commission),
-                    TotalTaxes = transactions.Sum(t => t.Tax),
-                    ByType = transactions.GroupBy(t => t.Type)
+                    TotalTransactions = transactionsList.Count,
+                    TotalVolume = transactionsList.Sum(t => Math.Abs(t.NetAmount)),
+                    TotalCommissions = transactionsList.Sum(t => t.Commission),
+                    TotalTaxes = transactionsList.Sum(t => t.Tax),
+                    ByType = transactionsList.GroupBy(t => t.Type)
                         .Select(g => new
                         {
                             Type = g.Key.ToString(),
@@ -419,7 +423,7 @@ namespace InvestmentPortfolioManager.API.Controllers
         private async Task UpdatePositionFromTransaction(Domain.Entities.Transaction transaction)
         {
             // Get existing position for this portfolio-security combination
-            var positions = await _unitOfWork.Positions.GetByPortfolioIdAsync(transaction.PortfolioId);
+            var positions = await _unitOfWork.Positions.GetPositionsByPortfolioIdAsync(transaction.PortfolioId);
             var existingPosition = positions.FirstOrDefault(p => p.SecurityId == transaction.SecurityId);
 
             if (existingPosition == null && (transaction.Type == TransactionType.Buy || transaction.Type == TransactionType.StockSplit))

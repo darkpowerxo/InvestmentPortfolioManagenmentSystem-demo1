@@ -38,7 +38,7 @@ namespace InvestmentPortfolioManager.API.Controllers
         {
             try
             {
-                var portfolios = await _unitOfWork.Portfolios.GetAllWithDetailsAsync();
+                var portfolios = await _unitOfWork.Portfolios.GetAllAsync();
 
                 // Apply filtering
                 if (!string.IsNullOrWhiteSpace(searchTerm))
@@ -118,7 +118,7 @@ namespace InvestmentPortfolioManager.API.Controllers
         {
             try
             {
-                var portfolio = await _unitOfWork.Portfolios.GetByIdWithDetailsAsync(id);
+                var portfolio = await _unitOfWork.Portfolios.GetByIdAsync(id);
                 if (portfolio == null)
                 {
                     return NotFound<PortfolioDto>($"Portfolio with ID {id} not found");
@@ -140,7 +140,7 @@ namespace InvestmentPortfolioManager.API.Controllers
         {
             try
             {
-                var portfolios = await _unitOfWork.Portfolios.GetByManagerIdAsync(managerId);
+                var portfolios = await _unitOfWork.Portfolios.GetPortfoliosByManagerIdAsync(managerId);
                 var portfolioDtos = portfolios.Select(p => p.ToDto()).ToList();
 
                 return Success(portfolioDtos);
@@ -159,7 +159,7 @@ namespace InvestmentPortfolioManager.API.Controllers
         {
             try
             {
-                var portfolios = await _unitOfWork.Portfolios.GetByTypeAsync(type);
+                var portfolios = await _unitOfWork.Portfolios.GetPortfoliosByTypeAsync(type);
                 var portfolioDtos = portfolios.Select(p => p.ToDto()).ToList();
 
                 return Success(portfolioDtos);
@@ -178,7 +178,7 @@ namespace InvestmentPortfolioManager.API.Controllers
         {
             try
             {
-                var portfolio = await _unitOfWork.Portfolios.GetByIdWithDetailsAsync(id);
+                var portfolio = await _unitOfWork.Portfolios.GetByIdAsync(id);
                 if (portfolio == null)
                 {
                     return NotFound<PortfolioSummaryDto>($"Portfolio with ID {id} not found");
@@ -214,7 +214,7 @@ namespace InvestmentPortfolioManager.API.Controllers
                 }
 
                 // Check if portfolio name already exists for this manager
-                var existingPortfolios = await _unitOfWork.Portfolios.GetByManagerIdAsync(createPortfolioDto.ManagerId);
+                var existingPortfolios = await _unitOfWork.Portfolios.GetPortfoliosByManagerIdAsync(createPortfolioDto.ManagerId);
                 if (existingPortfolios.Any(p => p.Name.Equals(createPortfolioDto.Name, StringComparison.OrdinalIgnoreCase)))
                 {
                     return Error<PortfolioDto>("A portfolio with this name already exists for this manager", statusCode: 409);
@@ -225,7 +225,7 @@ namespace InvestmentPortfolioManager.API.Controllers
                 await _unitOfWork.SaveChangesAsync();
 
                 // Reload with details
-                var createdPortfolio = await _unitOfWork.Portfolios.GetByIdWithDetailsAsync(portfolio.Id);
+                var createdPortfolio = await _unitOfWork.Portfolios.GetByIdAsync(portfolio.Id);
                 return Success(createdPortfolio!.ToDto(), "Portfolio created successfully");
             }
             catch (Exception ex)
@@ -269,7 +269,7 @@ namespace InvestmentPortfolioManager.API.Controllers
                 await _unitOfWork.SaveChangesAsync();
 
                 // Reload with details
-                var updatedPortfolio = await _unitOfWork.Portfolios.GetByIdWithDetailsAsync(id);
+                var updatedPortfolio = await _unitOfWork.Portfolios.GetByIdAsync(id);
                 return Success(updatedPortfolio!.ToDto(), "Portfolio updated successfully");
             }
             catch (Exception ex)
@@ -286,14 +286,15 @@ namespace InvestmentPortfolioManager.API.Controllers
         {
             try
             {
-                var portfolio = await _unitOfWork.Portfolios.GetByIdWithDetailsAsync(id);
+                var portfolio = await _unitOfWork.Portfolios.GetByIdAsync(id);
                 if (portfolio == null)
                 {
                     return NotFound<object>($"Portfolio with ID {id} not found");
                 }
 
-                // Check if portfolio has positions
-                if (portfolio.Positions?.Any() == true)
+                // Check if portfolio has positions - get positions separately
+                var positions = await _unitOfWork.Positions.GetPositionsByPortfolioIdAsync(id);
+                if (positions.Any())
                 {
                     return Error<object>("Cannot delete portfolio with existing positions", statusCode: 409);
                 }
@@ -301,7 +302,7 @@ namespace InvestmentPortfolioManager.API.Controllers
                 await _unitOfWork.Portfolios.DeleteAsync(portfolio);
                 await _unitOfWork.SaveChangesAsync();
 
-                return Success<object>(null, "Portfolio deleted successfully");
+                return Success<object>(new { }, "Portfolio deleted successfully");
             }
             catch (Exception ex)
             {
@@ -317,7 +318,8 @@ namespace InvestmentPortfolioManager.API.Controllers
         {
             try
             {
-                var largePortfolios = await _unitOfWork.Portfolios.GetLargePortfoliosAsync(threshold);
+                var allPortfolios = await _unitOfWork.Portfolios.GetAllAsync();
+                var largePortfolios = allPortfolios.Where(p => p.CurrentValue >= threshold);
                 var portfolioDtos = largePortfolios.Select(p => p.ToDto()).ToList();
 
                 return Success(portfolioDtos);
@@ -336,7 +338,8 @@ namespace InvestmentPortfolioManager.API.Controllers
         {
             try
             {
-                var lowCashPortfolios = await _unitOfWork.Portfolios.GetPortfoliosWithLowCashAsync(threshold);
+                var allPortfolios = await _unitOfWork.Portfolios.GetAllAsync();
+                var lowCashPortfolios = allPortfolios.Where(p => p.CashBalance <= threshold);
                 var portfolioDtos = lowCashPortfolios.Select(p => p.ToDto()).ToList();
 
                 return Success(portfolioDtos);
