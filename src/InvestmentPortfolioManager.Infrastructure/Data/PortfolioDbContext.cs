@@ -37,7 +37,7 @@ public class PortfolioDbContext : DbContext
         ConfigureTradeOrderEntity(modelBuilder);
 
         // Données de départ / Seed data
-        SeedData(modelBuilder);
+        SeedDataService.SeedData(modelBuilder);
     }
 
     private void ConfigureUserEntity(ModelBuilder modelBuilder)
