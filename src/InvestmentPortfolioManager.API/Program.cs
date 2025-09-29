@@ -7,6 +7,8 @@ using Microsoft.AspNetCore.Localization;
 using InvestmentPortfolioManager.Infrastructure.Data;
 using InvestmentPortfolioManager.Infrastructure.Extensions;
 using InvestmentPortfolioManager.Application.Extensions;
+using InvestmentPortfolioManager.API.Adapters;
+using ApplicationContracts = InvestmentPortfolioManager.Application.Contracts;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -44,6 +46,9 @@ builder.Services.AddInfrastructureServices(builder.Configuration);
 
 // Register Localization Service
 builder.Services.AddScoped<InvestmentPortfolioManager.API.Services.ILocalizationService, InvestmentPortfolioManager.API.Services.LocalizationService>();
+
+// Register UserRepository Adapter (bridges Application and Infrastructure interfaces)
+builder.Services.AddScoped<ApplicationContracts.IUserRepository, UserRepositoryAdapter>();
 
 // Add Swagger/OpenAPI
 builder.Services.AddEndpointsApiExplorer();
