@@ -1,26 +1,58 @@
 import React from 'react';
-import logo from './logo.svg';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { ThemeProvider, createTheme } from '@mui/material/styles';
+import { CssBaseline, AppBar, Toolbar, Typography, Button, Box } from '@mui/material';
+import Dashboard from './pages/Dashboard';
 import './App.css';
 
-function App() {
+const theme = createTheme({
+  palette: {
+    primary: {
+      main: '#1976d2',
+    },
+    secondary: {
+      main: '#dc004e',
+    },
+  },
+});
+
+const App: React.FC = () => {
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.tsx</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
+    <ThemeProvider theme={theme}>
+      <CssBaseline />
+      <Router>
+        <Box sx={{ flexGrow: 1 }}>
+          <AppBar position="static">
+            <Toolbar>
+              <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
+                Investment Portfolio Manager
+              </Typography>
+              <Button color="inherit" href="/">
+                Dashboard
+              </Button>
+              <Button color="inherit" href="/portfolios">
+                Portfolios
+              </Button>
+              <Button color="inherit" href="/securities">
+                Securities
+              </Button>
+              <Button color="inherit" href="/transactions">
+                Transactions
+              </Button>
+            </Toolbar>
+          </AppBar>
+          
+          <Routes>
+            <Route path="/" element={<Dashboard />} />
+            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/portfolios" element={<div>Portfolios Page Coming Soon</div>} />
+            <Route path="/securities" element={<div>Securities Page Coming Soon</div>} />
+            <Route path="/transactions" element={<div>Transactions Page Coming Soon</div>} />
+          </Routes>
+        </Box>
+      </Router>
+    </ThemeProvider>
   );
-}
+};
 
 export default App;
