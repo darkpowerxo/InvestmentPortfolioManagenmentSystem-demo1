@@ -1,4 +1,7 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
 using InvestmentPortfolioManager.Infrastructure.Data;
 using InvestmentPortfolioManager.Infrastructure.Extensions;
 using InvestmentPortfolioManager.Application.Extensions;
@@ -27,6 +30,32 @@ builder.Services.AddSwaggerGen(c =>
         Version = "v1",
         Description = "API pour la gestion de portefeuilles d'investissement / API for investment portfolio management"
     });
+});
+
+// Add JWT Authentication
+var jwtSettings = builder.Configuration.GetSection("JwtSettings");
+var key = Encoding.ASCII.GetBytes(jwtSettings["SecretKey"] ?? "your-very-long-secret-key-here-must-be-at-least-256-bits");
+
+builder.Services.AddAuthentication(options =>
+{
+    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+})
+.AddJwtBearer(options =>
+{
+    options.RequireHttpsMetadata = false; // Set to true in production
+    options.SaveToken = true;
+    options.TokenValidationParameters = new TokenValidationParameters
+    {
+        ValidateIssuerSigningKey = true,
+        IssuerSigningKey = new SymmetricSecurityKey(key),
+        ValidateIssuer = true,
+        ValidIssuer = jwtSettings["Issuer"],
+        ValidateAudience = true,
+        ValidAudience = jwtSettings["Audience"],
+        ValidateLifetime = true,
+        ClockSkew = TimeSpan.Zero
+    };
 });
 
 // Add CORS

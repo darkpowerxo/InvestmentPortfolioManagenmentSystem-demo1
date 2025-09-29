@@ -37,6 +37,10 @@ public class User
     public DateTime? LastLoginAt { get; set; }
     public bool IsActive { get; set; } = true;
     
+    // Authentication properties
+    public string? RefreshToken { get; set; }
+    public DateTime? RefreshTokenExpiryTime { get; set; }
+    
     // Navigation properties
     public virtual ICollection<Portfolio> ManagedPortfolios { get; set; } = new List<Portfolio>();
     public virtual ICollection<TradeOrder> CreatedOrders { get; set; } = new List<TradeOrder>();

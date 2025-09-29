@@ -18,6 +18,10 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IFinancialCalculationsService, FinancialCalculationsService>();
         services.AddScoped<IMarketDataService, MarketDataService>();
         services.AddScoped<ITransactionProcessingService, TransactionProcessingService>();
+        
+        // Authentication services
+        services.AddScoped<IAuthenticationService, AuthenticationService>();
+        services.AddScoped<IPasswordHasher, PasswordHasher>();
 
         return services;
     }
