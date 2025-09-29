@@ -5,6 +5,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 using InvestmentPortfolioManager.Domain.Entities;
 using InvestmentPortfolioManager.Application.DTOs;
+using InvestmentPortfolioManager.Infrastructure.Repositories.Contracts;
 
 namespace InvestmentPortfolioManager.Application.Services;
 
@@ -136,7 +137,7 @@ public class AuthenticationService : IAuthenticationService
 
     public ClaimsPrincipal? GetPrincipalFromExpiredToken(string token)
     {
-        var key = Encoding.ASCII.GetBytes(_configuration["Jwt:Key"] ?? throw new InvalidOperationException("JWT Key not configured"));
+        var key = Encoding.ASCII.GetBytes(_configuration["JwtSettings:SecretKey"] ?? throw new InvalidOperationException("JWT Key not configured"));
 
         var tokenValidationParameters = new TokenValidationParameters
         {

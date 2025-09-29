@@ -4,6 +4,8 @@ using Microsoft.Extensions.DependencyInjection;
 using InvestmentPortfolioManager.Infrastructure.Data;
 using InvestmentPortfolioManager.Infrastructure.Repositories;
 using InvestmentPortfolioManager.Infrastructure.Repositories.Contracts;
+// using InvestmentPortfolioManager.Infrastructure.Adapters;
+// using ApplicationContracts = InvestmentPortfolioManager.Application.Contracts;
 
 namespace InvestmentPortfolioManager.Infrastructure.Extensions;
 
@@ -38,7 +40,9 @@ public static class ServiceCollectionExtensions
         });
 
         // Repository Registration
+        // Repositories
         services.AddScoped<IUserRepository, UserRepository>();
+        // services.AddScoped<ApplicationContracts.IUserRepository, UserRepositoryAdapter>(); // Temporarily disabled
         services.AddScoped<IPortfolioRepository, PortfolioRepository>();
         services.AddScoped<ISecurityRepository, SecurityRepository>();
         services.AddScoped<IPositionRepository, PositionRepository>();

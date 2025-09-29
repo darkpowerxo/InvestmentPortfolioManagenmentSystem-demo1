@@ -2,6 +2,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\InvestmentPortfolioManager.Domain\InvestmentPortfolioManager.Domain.csproj" />
+    <ProjectReference Include="..\InvestmentPortfolioManager.Infrastructure\InvestmentPortfolioManager.Infrastructure.csproj" />
   </ItemGroup>
 
   <ItemGroup>
