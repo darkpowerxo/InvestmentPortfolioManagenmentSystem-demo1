@@ -1,0 +1,147 @@
+# Investment Portfolio Management System - Docker Compose
+# Local development environment with API, SQL Server, and Redis
+
+version: '3.8'
+
+services:
+  # SQL Server Database
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: portfolio-sqlserver
+    environment:
+      - ACCEPT_EULA=Y
+      - SA_PASSWORD=Portfolio123!
+      - MSSQL_PID=Developer
+    ports:
+      - "1433:1433"
+    volumes:
+      - sqlserver_data:/var/opt/mssql
+      - ./scripts/init-db.sql:/docker-entrypoint-initdb.d/init-db.sql:ro
+    networks:
+      - portfolio-network
+    restart: unless-stopped
+    healthcheck:
+      test: /opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P Portfolio123! -Q "SELECT 1"
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+
+  # Redis Cache
+  redis:
+    image: redis:7-alpine
+    container_name: portfolio-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - portfolio-network
+    restart: unless-stopped
+    command: redis-server --appendonly yes --requirepass RedisPortfolio123!
+    healthcheck:
+      test: ["CMD", "redis-cli", "--raw", "incr", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  # Portfolio Management API
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: portfolio-api
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:8080
+      - ConnectionStrings__DefaultConnection=Server=sqlserver,1433;Database=InvestmentPortfolioManager;User Id=sa;Password=Portfolio123!;TrustServerCertificate=true;MultipleActiveResultSets=true
+      - ConnectionStrings__RedisConnection=redis:6379,password=RedisPortfolio123!
+      - JwtSettings__SecretKey=SuperSecretKeyForJWTTokenGeneration123456789
+      - JwtSettings__Issuer=InvestmentPortfolioManager
+      - JwtSettings__Audience=CDPQ
+      - JwtSettings__ExpiryMinutes=60
+      - FileStorage__ReportsPath=/app/reports
+      - FileStorage__ExportsPath=/app/exports
+      - Logging__LogLevel__Default=Information
+      - Logging__LogLevel__Microsoft.AspNetCore=Warning
+    ports:
+      - "8080:8080"
+    volumes:
+      - api_reports:/app/reports
+      - api_exports:/app/exports
+    networks:
+      - portfolio-network
+    depends_on:
+      sqlserver:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+
+  # Frontend (React Application) - Development
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.dev
+    container_name: portfolio-frontend
+    environment:
+      - REACT_APP_API_URL=http://localhost:8080/api
+      - REACT_APP_ENV=development
+      - CHOKIDAR_USEPOLLING=true
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    networks:
+      - portfolio-network
+    depends_on:
+      - api
+    restart: unless-stopped
+
+  # Nginx Reverse Proxy (Optional)
+  nginx:
+    image: nginx:alpine
+    container_name: portfolio-nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/ssl:/etc/nginx/ssl:ro
+      - nginx_logs:/var/log/nginx
+    networks:
+      - portfolio-network
+    depends_on:
+      - api
+      - frontend
+    restart: unless-stopped
+    profiles:
+      - production
+
+# Volumes for persistent data
+volumes:
+  sqlserver_data:
+    driver: local
+  redis_data:
+    driver: local
+  api_reports:
+    driver: local
+  api_exports:
+    driver: local
+  nginx_logs:
+    driver: local
+
+# Networks
+networks:
+  portfolio-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16
