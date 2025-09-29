@@ -2,6 +2,8 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
+using System.Globalization;
+using Microsoft.AspNetCore.Localization;
 using InvestmentPortfolioManager.Infrastructure.Data;
 using InvestmentPortfolioManager.Infrastructure.Extensions;
 using InvestmentPortfolioManager.Application.Extensions;
@@ -10,6 +12,25 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddControllers();
+
+// Configure Localization
+builder.Services.AddLocalization(options => options.ResourcesPath = "Resources");
+builder.Services.Configure<RequestLocalizationOptions>(options =>
+{
+    var supportedCultures = new[]
+    {
+        new CultureInfo("en"),
+        new CultureInfo("fr")
+    };
+
+    options.DefaultRequestCulture = new RequestCulture("en");
+    options.SupportedCultures = supportedCultures;
+    options.SupportedUICultures = supportedCultures;
+
+    options.RequestCultureProviders.Insert(0, new QueryStringRequestCultureProvider());
+    options.RequestCultureProviders.Insert(1, new CookieRequestCultureProvider());
+    options.RequestCultureProviders.Insert(2, new AcceptLanguageHeaderRequestCultureProvider());
+});
 
 // Configure Entity Framework
 builder.Services.AddDbContext<PortfolioDbContext>(options =>
@@ -20,6 +41,9 @@ builder.Services.AddApplicationServices();
 
 // Register Infrastructure Services (repositories, unit of work)
 builder.Services.AddInfrastructureServices(builder.Configuration);
+
+// Register Localization Service
+builder.Services.AddScoped<InvestmentPortfolioManager.API.Services.ILocalizationService, InvestmentPortfolioManager.API.Services.LocalizationService>();
 
 // Add Swagger/OpenAPI
 builder.Services.AddEndpointsApiExplorer();
@@ -84,6 +108,9 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 app.UseCors("AllowAll");
+
+// Add Request Localization Middleware
+app.UseRequestLocalization();
 
 app.UseAuthentication();
 app.UseAuthorization();

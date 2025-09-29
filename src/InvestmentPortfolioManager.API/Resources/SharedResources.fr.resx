@@ -1,0 +1,225 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  
+  <!-- Common Terms -->
+  <data name="Portfolio" xml:space="preserve">
+    <value>Portefeuille</value>
+  </data>
+  <data name="Portfolios" xml:space="preserve">
+    <value>Portefeuilles</value>
+  </data>
+  <data name="Security" xml:space="preserve">
+    <value>Titre</value>
+  </data>
+  <data name="Securities" xml:space="preserve">
+    <value>Titres</value>
+  </data>
+  <data name="Position" xml:space="preserve">
+    <value>Position</value>
+  </data>
+  <data name="Positions" xml:space="preserve">
+    <value>Positions</value>
+  </data>
+  <data name="Transaction" xml:space="preserve">
+    <value>Transaction</value>
+  </data>
+  <data name="Transactions" xml:space="preserve">
+    <value>Transactions</value>
+  </data>
+  <data name="User" xml:space="preserve">
+    <value>Utilisateur</value>
+  </data>
+  <data name="Users" xml:space="preserve">
+    <value>Utilisateurs</value>
+  </data>
+  
+  <!-- Dashboard Terms -->
+  <data name="Dashboard" xml:space="preserve">
+    <value>Tableau de bord</value>
+  </data>
+  <data name="TotalPortfolioValue" xml:space="preserve">
+    <value>Valeur totale du portefeuille</value>
+  </data>
+  <data name="TodaysChange" xml:space="preserve">
+    <value>Changement d'aujourd'hui</value>
+  </data>
+  <data name="TotalPositions" xml:space="preserve">
+    <value>Total des positions</value>
+  </data>
+  <data name="CashBalance" xml:space="preserve">
+    <value>Solde de trésorerie</value>
+  </data>
+  <data name="PortfolioAllocation" xml:space="preserve">
+    <value>Répartition du portefeuille</value>
+  </data>
+  <data name="TopPositions" xml:space="preserve">
+    <value>Principales positions</value>
+  </data>
+  <data name="RecentTransactions" xml:space="preserve">
+    <value>Transactions récentes</value>
+  </data>
+  <data name="PortfolioPerformance" xml:space="preserve">
+    <value>Performance du portefeuille</value>
+  </data>
+  
+  <!-- Action Terms -->
+  <data name="Create" xml:space="preserve">
+    <value>Créer</value>
+  </data>
+  <data name="Edit" xml:space="preserve">
+    <value>Modifier</value>
+  </data>
+  <data name="Delete" xml:space="preserve">
+    <value>Supprimer</value>
+  </data>
+  <data name="Save" xml:space="preserve">
+    <value>Enregistrer</value>
+  </data>
+  <data name="Cancel" xml:space="preserve">
+    <value>Annuler</value>
+  </data>
+  <data name="Search" xml:space="preserve">
+    <value>Rechercher</value>
+  </data>
+  <data name="Filter" xml:space="preserve">
+    <value>Filtrer</value>
+  </data>
+  <data name="Export" xml:space="preserve">
+    <value>Exporter</value>
+  </data>
+  
+  <!-- Financial Terms -->
+  <data name="MarketValue" xml:space="preserve">
+    <value>Valeur marchande</value>
+  </data>
+  <data name="BookValue" xml:space="preserve">
+    <value>Valeur comptable</value>
+  </data>
+  <data name="UnrealizedGainLoss" xml:space="preserve">
+    <value>Gain/Perte non réalisé</value>
+  </data>
+  <data name="RealizedGainLoss" xml:space="preserve">
+    <value>Gain/Perte réalisé</value>
+  </data>
+  <data name="Quantity" xml:space="preserve">
+    <value>Quantité</value>
+  </data>
+  <data name="Price" xml:space="preserve">
+    <value>Prix</value>
+  </data>
+  <data name="Amount" xml:space="preserve">
+    <value>Montant</value>
+  </data>
+  <data name="Currency" xml:space="preserve">
+    <value>Devise</value>
+  </data>
+  
+  <!-- Status Terms -->
+  <data name="Active" xml:space="preserve">
+    <value>Actif</value>
+  </data>
+  <data name="Inactive" xml:space="preserve">
+    <value>Inactif</value>
+  </data>
+  <data name="Pending" xml:space="preserve">
+    <value>En attente</value>
+  </data>
+  <data name="Completed" xml:space="preserve">
+    <value>Terminé</value>
+  </data>
+  <data name="Failed" xml:space="preserve">
+    <value>Échoué</value>
+  </data>
+  
+  <!-- Validation Messages -->
+  <data name="RequiredField" xml:space="preserve">
+    <value>Ce champ est obligatoire.</value>
+  </data>
+  <data name="InvalidEmail" xml:space="preserve">
+    <value>Veuillez saisir une adresse e-mail valide.</value>
+  </data>
+  <data name="InvalidAmount" xml:space="preserve">
+    <value>Veuillez saisir un montant valide.</value>
+  </data>
+  <data name="InvalidDate" xml:space="preserve">
+    <value>Veuillez saisir une date valide.</value>
+  </data>
+  
+  <!-- Error Messages -->
+  <data name="ErrorOccurred" xml:space="preserve">
+    <value>Une erreur s'est produite. Veuillez réessayer.</value>
+  </data>
+  <data name="NotFound" xml:space="preserve">
+    <value>L'élément demandé n'a pas été trouvé.</value>
+  </data>
+  <data name="Unauthorized" xml:space="preserve">
+    <value>Vous n'êtes pas autorisé à effectuer cette action.</value>
+  </data>
+  <data name="LoginRequired" xml:space="preserve">
+    <value>Veuillez vous connecter pour continuer.</value>
+  </data>
+  <data name="InvalidLanguage" xml:space="preserve">
+    <value>Langue non valide. Les langues prises en charge sont 'en' et 'fr'.</value>
+  </data>
+  <data name="LanguageChanged" xml:space="preserve">
+    <value>La langue a été changée avec succès.</value>
+  </data>
+</root>

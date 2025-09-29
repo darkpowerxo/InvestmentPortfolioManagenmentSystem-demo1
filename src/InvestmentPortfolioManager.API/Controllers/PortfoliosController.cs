@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using InvestmentPortfolioManager.Infrastructure.Repositories.Contracts;
 using InvestmentPortfolioManager.Application.DTOs;
 using InvestmentPortfolioManager.API.Extensions;
+using InvestmentPortfolioManager.API.Services;
 using InvestmentPortfolioManager.Domain.Enums;
 
 namespace InvestmentPortfolioManager.API.Controllers
@@ -15,10 +16,12 @@ namespace InvestmentPortfolioManager.API.Controllers
     public class PortfoliosController : BaseController
     {
         private readonly IUnitOfWork _unitOfWork;
+        private readonly ILocalizationService _localizationService;
 
-        public PortfoliosController(IUnitOfWork unitOfWork)
+        public PortfoliosController(IUnitOfWork unitOfWork, ILocalizationService localizationService)
         {
             _unitOfWork = unitOfWork;
+            _localizationService = localizationService;
         }
 
         /// <summary>
@@ -121,7 +124,7 @@ namespace InvestmentPortfolioManager.API.Controllers
                 var portfolio = await _unitOfWork.Portfolios.GetByIdAsync(id);
                 if (portfolio == null)
                 {
-                    return NotFound<PortfolioDto>($"Portfolio with ID {id} not found");
+                    return NotFound<PortfolioDto>(_localizationService.GetLocalizedString("NotFound"));
                 }
 
                 return Success(portfolio.ToDto());
